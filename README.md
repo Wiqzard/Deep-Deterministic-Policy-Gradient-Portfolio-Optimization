@@ -1,1 +1,1 @@
-# Deep-Q-Learning-Trading-Bot
+# Deep-Deterministic-Policy-Gradient-Portfolio-Optimization

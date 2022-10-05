@@ -11,8 +11,14 @@ num_periods: int = 50  # number of periods before t
 num_data_points: int = 2000
 
 # available data per coin
+raw_data_matrix: ndarray = np.random.rand(num_features, num_periods, num_assets)
 data_asset_i: ndarray = np.random.rand(num_features, num_data_points)
+df = pd.DataFrame(np.random.randint(0, 100, size=(100, 4)), columns=list("ABCD"))
 
+# df = pd.DataFrame(
+#   np.random.randint(0, 100, size=(100, 3)), columns=["Open", "High", "Close"]
+# )
+print(df.tail())
 
 # The actual prices for the assets at period t
 v_t: ndarray = np.random.rand(num_assets)
@@ -41,10 +47,14 @@ def normalized_price_matrix(data_matrix: ndarray, idx: int) -> ndarray:
 
 
 # -> is the correct price tensor
+print(normalized_price_martix_asset(data_asset_i, 333).shape)
+print(
+    normalized_price_matrix(raw_data_matrix, 333).shape
+)  # [num_features, num_periods, num_assets]
 
 
 action: ndarray = np.random.rand(num_assets)
-action = action / action.sum(axis=1, keepdims=1)
+# action = action / action.sum(axis=1, keepdims=1)
 
 """
 * price tensor X_t = [feature_number, number_periods, number_assets]

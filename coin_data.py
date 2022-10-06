@@ -68,8 +68,11 @@ def retrieve_data(
 
 ticker = "ATOM-USD"
 granularity = 900
-start_date = "2022-09-14-00-00"
-data = retrieve_data(ticker, granularity, start_date)
+start_date = "2022-10-2-00-00"
+data: pd.DataFrame = retrieve_data(ticker, granularity, start_date)
+# -> df = [time, low , high, open, volume]
+
+
 # Stable coin as numeraire?
 coins = [
     "BTC",

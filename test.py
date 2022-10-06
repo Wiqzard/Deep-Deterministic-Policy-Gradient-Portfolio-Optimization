@@ -1,12 +1,9 @@
-import itertools
 import pandas as pd
-from pandas import DataFrame
 import numpy as np
 from numpy import ndarray as ndarray
 import datetime
 import requests
 import json
-import sys
 import time
 from datetime import datetime, timedelta
 from random import randint
@@ -14,19 +11,9 @@ from tqdm.auto import tqdm
 import logging
 
 
-# from coin_data import *
-
-
-# print(df.tail())
-
-
-# action: ndarray = np.random.rand(num_assets)
-# action = action / action.sum(axis=1, keepdims=1)
-
 """
 * price tensor X_t = [feature_number, number_periods, number_assets]
-                = cat((V_t, V^high_t, V^lo_t), 1) 
-    With V^x_t = [v_t-n+1 / v_t | ] 
+                = cat((V_t, V^high_t, V^lo_t), 1) With V^x_t = [v_t-n+1 / v_t | ] 
 * states: s_t=(price tensor X_t, action_t-1)
 * action: number_assets x 1 array
 * (state_t, action_t) -> (state_t+1=(price_t+1, action_t), action_t+1)
@@ -149,14 +136,14 @@ class PriceHistory:
 
     # Put in whole datamatrix [feature_number, num_data_points, number_assets] + idx
     def normalized_price_matrix(self, idx: int) -> ndarray:
-        assert idx >= self.num_periods and idx <=self.data_matrix[0].shape
+        assert idx >= self.num_periods and idx <= self.data_matrix[0].shape
         X_t = np.empty((self.num_features, self.num_periods, 1))
         for asset in range(self.num_assets):
             X_t = np.concatenate(
                 (X_t, self.normalized_price_martix_asset(self.data_matrix[asset], idx)),
                 axis=2,
             )
-        X_t = X_t[:, :, 1:]
+        X_t = X_t[1:, 1:, 1:]
         return X_t
 
 

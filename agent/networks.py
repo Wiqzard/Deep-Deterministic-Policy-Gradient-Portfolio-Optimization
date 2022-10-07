@@ -7,7 +7,16 @@ import numpy as np
 
 
 class CriticNetwork(nn.Module):
-    def __init__(self, beta, input_dims, fcl_dims, fc2_dims, n_actions, name, chkpt_dir="/content/ddpg"):
+    def __init__(
+        self,
+        beta,
+        input_dims,
+        fcl_dims,
+        fc2_dims,
+        n_actions,
+        name,
+        chkpt_dir="/content/ddpg",
+    ):
         super(CriticNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fcl_dims
@@ -38,31 +47,40 @@ class CriticNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
-    
+
     def forward(self, state, action):
         state_value = self.fc1(state)
         state_value = self.bn1(state_value)
         state_value = F.relu(state_value)
         state_value = self.fc2(state_value)
         state_value = self.bn2(state_value)
-        
+
         action_value = F.relu(self.action_value(action))
         state_action_value = F.relu(torch.add(state_value, action_value))
         state_action_value = self.q(state_action_value)
-        
+
         return state_action_value
-    
+
     def save_checkpoint(self):
         print("... saving checkpoint ...")
         torch.save(self.state_dict(), self.checkpoint_file)
-        
+
     def load_checkpoint(self):
         print("... loading checkpoint ...")
         torch.load_state_dict(torch.load.checkpoint_file)
-        
+
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, input_dims, fcl_dims, fc2_dims, n_actions, name, chkpt_dir="/content/ddpg"):
+    def __init__(
+        self,
+        alpha,
+        input_dims,
+        fcl_dims,
+        fc2_dims,
+        n_actions,
+        name,
+        chkpt_dir="/content/ddpg",
+    ):
         super(ActorNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fcl_dims
@@ -92,7 +110,6 @@ class ActorNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
-        
 
     def forward(self, state):
         x = self.fc1(state)
@@ -104,14 +121,11 @@ class ActorNetwork(nn.Module):
         x = torch.tanh(self.mu(x))
 
         return x
-        
+
     def save_checkpoint(self):
         print("... saving checkpoint ...")
         torch.save(self.state_dict(), self.checkpoint_file)
-        
+
     def load_checkpoint(self):
         print("... loading checkpoint ...")
         torch.load_state_dict(torch.load.checkpoint_file)
-        
-        
-        

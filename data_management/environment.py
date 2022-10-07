@@ -111,22 +111,3 @@ class Environment:
         )  # True if end of sequence
 
         return next_state, reward, done
-
-
-granularity = 900
-start_date = "2022-09-30-00-00"
-env = Environment(num_features=3, num_periods=7, granularity=900, start_date=start_date)
-
-done = False
-total_reward = 0
-state = env.reset()
-while not done:
-    rand = np.random.rand(2)
-    action = rand / sum(rand)
-    state, reward, done = env.step(action)
-    # total_reward += reward
-
-print(state)
-print(reward)
-print(done)
-print(env.period)

@@ -13,7 +13,8 @@ import logging
 
 """
 * price tensor X_t = [feature_number, number_periods, number_assets]
-                = cat((V_t, V^high_t, V^lo_t), 1) With V^x_t = [v_t-n+1 / v_t | ] 
+                = cat((V_t, V^high_t, V^lo_t), 1) 
+    With V^x_t = [v_t-n+1 / v_t | ] 
 * states: s_t=(price tensor X_t, action_t-1)
 * action: number_assets x 1 array
 * (state_t, action_t) -> (state_t+1=(price_t+1, action_t), action_t+1)
@@ -136,7 +137,8 @@ class PriceHistory:
 
     # Put in whole datamatrix [feature_number, num_data_points, number_assets] + idx
     def normalized_price_matrix(self, idx: int) -> ndarray:
-        assert idx >= self.num_periods and idx <= self.data_matrix[0].shape
+        idx += self.num_periods - 1
+        assert idx >= self.num_periods and idx <= self.data_matrix[0].shape[0]
         X_t = np.empty((self.num_features, self.num_periods, 1))
         for asset in range(self.num_assets):
             X_t = np.concatenate(
@@ -144,15 +146,5 @@ class PriceHistory:
                 axis=2,
             )
         X_t = X_t[1:, 1:, 1:]
+        # [feature_number, num_periods before t ascending, num_assets]
         return X_t
-
-
-granularity = 900
-start_date = "2022-09-30-00-00"
-history = PriceHistory(
-    num_features=3, num_periods=7, granularity=granularity, start_date=start_date
-)
-history.set_data_matrix()
-X_t = history.normalized_price_matrix(10)
-
-print(X_t.shape)

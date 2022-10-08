@@ -5,13 +5,16 @@ NUM_FEATURES = 3
 NUM_PERIODS = 50
 NUM_ASSETS = 8
 
-State = tuple[np.ndarray((NUM_FEATURES, NUM_PERIODS, NUM_ASSETS)), np.ndarray((NUM_ASSETS))]
+State = tuple[
+    np.ndarray((NUM_FEATURES, NUM_PERIODS, NUM_ASSETS)), np.ndarray((NUM_ASSETS))
+]
 
 
 class ReplayBuffer(object):
     """
     n_actions = num_assets
     input state: tuple[np.ndarray(3, 50, 8), np.ndarray(8)]) = tuple[price_matrix, previous_action]
+                    -> saves into 2d array (not efficient)
 
     """
 
@@ -56,23 +59,10 @@ class ReplayBuffer(object):
         return states, actions, rewards, new_states, terminal
 
 
-state1 = np.random.rand(3, 50, 8)
-state2 = np.random.rand(8)
-
-state = (state1, state2)
-action = np.random.rand(8)
-reward = 0.00232
-
-mem = ReplayBuffer(1000, (3, 50, 8), 8)
-mem.store_transition(state, action, reward, state, False)
-mem.store_transition(state, action, reward, state, False)
-mem.store_transition(state, action, reward, state, False)
-
-a, b, c, d, e = mem.sample_buffer(2)
-print(a[0].shape)
-print(a[1].shape)
-print(b.shape)
-print(c.shape)
-print(d[0].shape)
-print(d[1].shape)
-print(e.shape)
+# print(a[0].shape)
+# print(a[1].shape)
+# print(b.shape)
+# print(c.shape)
+# print(d[0].shape)
+# print(d[1].shape)
+# print(e.shape)

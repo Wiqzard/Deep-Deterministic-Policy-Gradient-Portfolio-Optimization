@@ -1,7 +1,9 @@
-from noise import *
-from replay_buffer import *
-from networks import *
-from data_management.environment import *
+import torch
+import torch.nn.functional as F
+import numpy as np
+from agent.noise import OUActionNoise
+from agent.replay_buffer import ReplayBuffer
+from agent.networks import CriticNetwork, ActorNetwork
 
 
 class Agent(object):
@@ -15,27 +17,26 @@ class Agent(object):
         n_actions: int,
         gamma=0.99,
         max_size=1000000,
-        layer1_size=400,
-        layer2_size=300,
         batch_size=64,
     ):
+        """
+        critic
+        beta, num_features, num_periods, num_assets,name
+
+        replay
+        self, max_size, input_shape, n_actions
+        """
         self.gamma = gamma
         self.tau = tau
         self.batch_size = batch_size
+
+        # input
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
 
-        self.actor = ActorNetwork(
-            alpha, input_dims, layer1_size, layer2_size, n_actions, name="Actor"
-        )
-        self.target_actor = ActorNetwork(
-            alpha, input_dims, layer1_size, layer2_size, n_actions, name="TargetActor"
-        )
-        self.critic = CriticNetwork(
-            beta, input_dims, layer1_size, layer2_size, n_actions, name="Critic"
-        )
-        self.target_critic = CriticNetwork(
-            beta, input_dims, layer1_size, layer2_size, n_actions, name="TargetCritic"
-        )
+        self.actor = ActorNetwork(alpha, input_dims, name="Actor")
+        self.target_actor = ActorNetwork(alpha, input_dims, name="TargetActor")
+        self.critic = CriticNetwork(beta, input_dims, name="Critic")
+        self.target_critic = CriticNetwork(beta, input_dims, name="TargetCritic")
 
         self.noise = OUActionNoise(mu=np.zeros(n_actions))
 
@@ -141,25 +142,3 @@ class Agent(object):
         self.critic.load_checkpoint()
         self.target_actor.load_checkpoint()
         self.target_critic.load_checkpoint()
-
-
-agent = Agent(
-    alpha=0.000025,
-    beta=0.00025,
-    input_dims=[8],
-    tau=0.001,
-    # env=env,
-    batch_size=64,
-    layer1_size=400,
-    layer2_size=300,
-    n_actions=2,
-)
-
-
-granularity = 900
-start_date = "2022-09-30-00-00"
-env = Environment(num_features=3, num_periods=7, granularity=900, start_date=start_date)
-
-obs = env.reset()
-action = agent.choose_action(obs)
-print(action)

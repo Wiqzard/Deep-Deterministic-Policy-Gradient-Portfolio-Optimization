@@ -23,6 +23,3 @@ class OUActionNoise(object):
         self.x_prev = self.x0 if self.x0 is not None else np.zeros_like(self.mu)
 
 
-# action = np.zeros(8)
-# noise = OUActionNoise(action)
-# print(noise())

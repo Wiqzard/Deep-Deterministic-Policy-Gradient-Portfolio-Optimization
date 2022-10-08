@@ -120,16 +120,6 @@ class ActorNetwork(nn.Module):
         return x
 
 
-input_dims = [3, 50, 8]
-actor = ActorNetwork(alpha=0.01, input_dims=input_dims, name="Actor")
-state = (torch.randn((3, 50, 8)), torch.randn(8))
-action_1 = torch.randn(8)
-action = actor(state)
-print(action)
-
-critic = CriticNetwork(beta=0.01, input_dims=input_dims, name="Critic")
-q = critic(state, action_1)
-print(q)
 
 
 class ActorNetworkLinear(nn.Module):

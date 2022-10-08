@@ -1,7 +1,20 @@
 import numpy as np
 
 
+NUM_FEATURES = 3
+NUM_PERIODS = 50
+NUM_ASSETS = 8
+
+State = tuple[np.ndarray((NUM_FEATURES, NUM_PERIODS, NUM_ASSETS)), np.ndarray((NUM_ASSETS))]
+
+
 class ReplayBuffer(object):
+    """
+    n_actions = num_assets
+    input state: tuple[np.ndarray(3, 50, 8), np.ndarray(8)]) = tuple[price_matrix, previous_action]
+
+    """
+
     def __init__(self, max_size, input_shape, n_actions):
         self.mem_size = max_size
         self.mem_cntr = 0

@@ -11,30 +11,27 @@ class CriticNetwork(nn.Module):
     def __init__(
         self,
         beta,
-        num_features,
-        num_periods,
-        num_assets,
+        input_dims: list[int, int, int],
         name,
         chkpt_dir="/content/ddpg",
     ):
         super(CriticNetwork, self).__init__()
-        self.num_features = num_features
-        self.num_periods = num_periods
-        self.num_assets = num_assets
+        self.input_dims = input_dims
+
         self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg")
 
         self.conv1 = nn.Conv2d(
-            in_channels=self.num_features, out_channels=2, kernel_size=(3, 1)
+            in_channels=self.input_dims[0], out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
-            in_channels=2, out_channels=20, kernel_size=(self.num_periods - 2, 1)
+            in_channels=2, out_channels=20, kernel_size=(self.input_dims[1] - 2, 1)
         )
         self.conv3 = nn.Conv2d(in_channels=21, out_channels=1, kernel_size=(1, 1))
 
-        self.bn1 = nn.LayerNorm([1, 1, self.num_assets])
+        self.bn1 = nn.LayerNorm([1, 1, self.input_dims[2]])
 
-        self.linear_state = nn.Linear(self.num_assets, 16)
-        self.linear_action = nn.Linear(self.num_assets, 16)
+        self.linear_state = nn.Linear(self.input_dims[2], 16)
+        self.linear_action = nn.Linear(self.input_dims[2], 16)
         self.bn2 = nn.LayerNorm(16)
         self.linear_q = nn.Linear(16, 1)
 
@@ -73,24 +70,20 @@ class ActorNetwork(nn.Module):
     def __init__(
         self,
         alpha,
-        num_features,
-        num_periods,
-        num_assets,
+        input_dims: list[int, int, int],
         name,
         chkpt_dir="/content/ddpg",
     ):
         super(ActorNetwork, self).__init__()
         self.alpha = alpha
-        self.num_assets = num_assets
-        self.num_features = num_features
-        self.num_periods = num_periods
+        self.input_dims = input_dims
         self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg")
 
         self.conv1 = nn.Conv2d(
-            in_channels=self.num_features, out_channels=2, kernel_size=(3, 1)
+            in_channels=self.input_dims[0], out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
-            in_channels=2, out_channels=20, kernel_size=(self.num_periods - 2, 1)
+            in_channels=2, out_channels=20, kernel_size=(self.input_dims[1] - 2, 1)
         )
         self.conv3 = nn.Conv2d(in_channels=21, out_channels=1, kernel_size=(1, 1))
 
@@ -127,17 +120,14 @@ class ActorNetwork(nn.Module):
         return x
 
 
-actor = ActorNetwork(
-    alpha=0.01, num_features=3, num_periods=50, num_assets=8, name="Actor"
-)
+input_dims = [3, 50, 8]
+actor = ActorNetwork(alpha=0.01, input_dims=input_dims, name="Actor")
 state = (torch.randn((3, 50, 8)), torch.randn(8))
 action_1 = torch.randn(8)
 action = actor(state)
 print(action)
 
-critic = CriticNetwork(
-    beta=0.01, num_features=3, num_periods=50, num_assets=8, name="Critic"
-)
+critic = CriticNetwork(beta=0.01, input_dims=input_dims, name="Critic")
 q = critic(state, action_1)
 print(q)
 

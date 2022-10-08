@@ -44,7 +44,11 @@ class Agent(object):
 
     def choose_action(self, oberservation):
         self.actor.eval()
-        oberservation = torch.tensor(oberservation).to(self.actor.device)
+        # oberservation = torch.tensor(oberservation).to(self.actor.device)
+        oberservation = (
+            torch.tensor(oberservation[0], dtype=torch.float),
+            torch.tensor(oberservation[1], dtype=torch.float).unsqueeze(0).unsqueeze(0),
+        )
         mu = self.actor(oberservation).to(self.actor.device)
         mu_prime = mu + torch.tensor(self.noise(), dtype=torch.float).to(
             self.actor.device
@@ -64,9 +68,21 @@ class Agent(object):
         )
         reward = torch.tensor(reward, dtype=torch.float).to(self.critic.device)
         done = torch.tensor(done, dtype=torch.float).to(self.critic.device)
-        new_state = torch.tensor(new_state, dtype=torch.float).to(self.critic.device)
+        new_state = (
+            torch.tensor(new_state[0], dtype=torch.float).to(self.critic.device),
+            torch.tensor(new_state[1], dtype=torch.float)
+            .unsqueeze(0)
+            .unsqueeze(0)
+            .to(self.critic.device),
+        )
         action = torch.tensor(action, dtype=torch.float).to(self.critic.device)
-        state = torch.tensor(state, dtype=torch.float).to(self.critic.device)
+        state = (
+            torch.tensor(state[0], dtype=torch.float).to(self.critic.device),
+            torch.tensor(state[1], dtype=torch.float)
+            .unsqueeze(0)
+            .unsqueeze(0)
+            .to(self.critic.device),
+        )
 
         self.target_actor.eval()
         self.target_critic.eval()

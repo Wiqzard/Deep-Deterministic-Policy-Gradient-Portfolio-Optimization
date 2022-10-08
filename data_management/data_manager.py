@@ -140,11 +140,18 @@ class PriceHistory:
         idx += self.num_periods - 1
         assert idx >= self.num_periods and idx <= self.data_matrix[0].shape[0]
         X_t = np.empty((self.num_features, self.num_periods, 1))
+
         for asset in range(self.num_assets):
             X_t = np.concatenate(
                 (X_t, self.normalized_price_martix_asset(self.data_matrix[asset], idx)),
                 axis=2,
             )
-        X_t = X_t[1:, 1:, 1:]
+            # print(
+            #    f"normprice: {self.normalized_price_martix_asset(self.data_matrix[asset], idx).shape}"
+            # )
+        # print(f"X_t: {X_t.shape}")
+        X_t = X_t[:, :, 1:]
         # [feature_number, num_periods before t ascending, num_assets]
+        # print(f"X_t: {X_t.shape}")
+
         return X_t

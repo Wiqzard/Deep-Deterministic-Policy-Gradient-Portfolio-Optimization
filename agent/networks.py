@@ -108,18 +108,19 @@ class ActorNetwork(nn.Module):
         softmax:  -> [num_assets + 1] normalized to 1
         """
         # state is tuple (X_t, w_t-1)
-        # x = torch.tensor(state[0], dtype=torch.float32).to(self.device)
-        x = state[0]
+        w_t_1 = state[1].clone().detach().to(self.device)
+        print(w_t_1.shape)
+        x = state[0].clone().detach().to(self.device)
         x = nn.functional.relu(self.conv1(x))
         x = nn.functional.relu(self.conv2(x))
-        x = torch.cat((x, state[1].unsqueeze(0).unsqueeze(0)), dim=0)
+        print(x.shape)
+        print(w_t_1.shape)
+        x = torch.cat((x, w_t_1), dim=0)
         x = self.conv3(x).squeeze()
         # cash_bias = nn.Parameter(torch.zeros(1,1,1))
         # x = torch.cat((chash_bias, x), dim=2)
         x = nn.functional.softmax(x, dim=0)
         return x
-
-
 
 
 class ActorNetworkLinear(nn.Module):

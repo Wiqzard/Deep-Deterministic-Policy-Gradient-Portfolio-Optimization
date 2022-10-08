@@ -1,5 +1,6 @@
-from data_management.data_manager import *
+from data_management.data_manager import PriceHistory
 
+import numpy as np
 import math
 
 
@@ -15,12 +16,12 @@ class Environment:
 
         self.num_features = num_features
         self.num_periods = num_periods
-
         self.granularity = granularity
         self.start_date = start_date
         self.end_date = end_date
         self.commision_rate_selling = 0.0025
         self.commision_rate_purchasing = 0.0025
+
         self.state_space = PriceHistory(
             num_features=self.num_features,
             num_periods=self.num_periods,
@@ -28,9 +29,8 @@ class Environment:
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        self.state_space.set_data_matrix()
 
-        self.period = 1
+        self.period = 0
 
         self.reward_history = []
         self.state_history = []
@@ -52,6 +52,7 @@ class Environment:
         y_t = np.reciprocal(
             X_t[0, -2, :]
         )  # np.ones_like(state_action["state_t"][0, -2:, :]) / state_action["state_t"][0, -2:, :]
+
         w_t_prime = (np.multiply(y_t, w_t_1)) / np.dot(y_t, w_t_1)
         mu_t = self.commision_rate_selling * sum(
             np.abs(w_t_prime - state_action["action_t"])
@@ -62,21 +63,24 @@ class Environment:
         return r_t
 
     def _calculate_cummulated_reward(self, states_actions: dict) -> float:
-        assert states_actions
+        # assert states_actions
 
         # action = list [num_assets]
         # y_t = states_actions[]
         # total_reward = 1/len(states_actions)
         # return total_reward
+        return 0
 
     def reset(self):
         """
         Reset attributes
         retun start state
         """
+        self.state_space.set_data_matrix()
+        self.period = 1  ######################
         self.reward_history = []
         self.state_history = []
-        self.period = 1
+
         start_action = np.zeros(self.state_space.num_assets)
         start_action[0] = 1
         start_state = (
@@ -94,7 +98,7 @@ class Environment:
         output: X_t+1, reward_t, done, info
         """
         self.period += 1
-        self.action_buffer = action
+
         curr_states_action = {
             "state_t": (
                 self.state_space.normalized_price_matrix(self.period),
@@ -108,6 +112,8 @@ class Environment:
         done = (
             self.period + self.state_space.num_periods
             == self.state_space.data_matrix[0].shape[0]
-        )  # True if end of sequence
+        )  # True if end of sequence################################
+
+        self.action_buffer = action
 
         return next_state, reward, done

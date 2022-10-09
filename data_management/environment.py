@@ -29,6 +29,7 @@ class Environment:
             start_date=self.start_date,
             end_date=self.end_date,
         )
+        self.state_space.set_data_matrix()
 
         self.period = 0
 
@@ -76,8 +77,8 @@ class Environment:
         Reset attributes
         retun start state
         """
-        self.state_space.set_data_matrix()
-        self.period = 1  ######################
+
+        self.period = 1  # maybe rename self.period to smth like steps. Makes more sense from paper's perspective
         self.reward_history = []
         self.state_history = []
 

@@ -45,6 +45,9 @@ class Agent(object):
     def choose_action(self, oberservation):
         self.actor.eval()
         # oberservation = torch.tensor(oberservation).to(self.actor.device)
+        # print(
+        #    f"choose action: obs = {oberservation[0].shape} and {oberservation[1].shape}"
+        # )
         oberservation = (
             torch.tensor(oberservation[0], dtype=torch.float),
             torch.tensor(oberservation[1], dtype=torch.float).unsqueeze(0).unsqueeze(0),
@@ -71,16 +74,21 @@ class Agent(object):
         new_state = (
             torch.tensor(new_state[0], dtype=torch.float).to(self.critic.device),
             torch.tensor(new_state[1], dtype=torch.float)
-            .unsqueeze(0)
-            .unsqueeze(0)
+            .unsqueeze(1)
+            .unsqueeze(1)
             .to(self.critic.device),
         )
-        action = torch.tensor(action, dtype=torch.float).to(self.critic.device)
+        action = (
+            torch.tensor(action, dtype=torch.float)
+            .unsqueeze(1)
+            .unsqueeze(1)
+            .to(self.critic.device)
+        )
         state = (
             torch.tensor(state[0], dtype=torch.float).to(self.critic.device),
             torch.tensor(state[1], dtype=torch.float)
-            .unsqueeze(0)
-            .unsqueeze(0)
+            .unsqueeze(1)
+            .unsqueeze(1)
             .to(self.critic.device),
         )
 
@@ -88,17 +96,23 @@ class Agent(object):
         self.target_critic.eval()
         self.critic.eval()
 
-        target_actions = self.target_actor.forward(new_state)
+        target_actions = self.target_actor.forward(new_state).unsqueeze(1).unsqueeze(1)
         critic_value_ = self.target_critic.forward(new_state, target_actions)
         critic_value = self.critic.forward(state, action)
+
+        # print(f"state: {state[0].shape} and {state[1].shape}")
+        # print(f"action: {action.shape}")
+        # print(f"new_state: {new_state[0].shape} and {new_state[1].shape}")
+        # print(f"target_actions: {target_actions.shape}")
+        # print(f"critic_value : {critic_value_.shape}")
+        # print(f"critic_value_ : {critic_value_.shape}")
 
         target = [
             reward[j] + self.gamma * critic_value_[j] * done[j]
             for j in range(self.batch_size)
         ]
-
         target = torch.tensor(target, dtype=torch.float).to(self.critic.device)
-        target = target.view(self.batch_size, 1)
+        target = target.view(self.batch_size, 1).squeeze()
 
         self.critic.train()
         self.critic.optimizer.zero_grad()
@@ -108,7 +122,7 @@ class Agent(object):
 
         self.critic.eval()
         self.actor.optimizer.zero_grad()
-        mu = self.actor.forward(state)
+        mu = self.actor.forward(state).unsqueeze(1).unsqueeze(1)
         self.actor.train()
         actor_loss = -self.critic.forward(state, mu)
         actor_loss = torch.mean(actor_loss)

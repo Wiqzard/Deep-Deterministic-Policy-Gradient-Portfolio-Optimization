@@ -50,19 +50,26 @@ class CriticNetwork(nn.Module):
     def forward(self, state, action):
         # state_value = torch.tensor(state[0], dtype=torch.float32)
         state_value = state[0]
+        # print(f"in foward critic state0 {state_value.shape}")
         state_value = nn.functional.relu(self.conv1(state_value))
         state_value = nn.functional.relu(self.conv2(state_value))
-        state_value = torch.cat(
-            (state_value, state[1].unsqueeze(0).unsqueeze(0)), dim=0
+        # print(f"len :{len(state_value.shape)}")
+        state_value = (
+            torch.cat((state_value, state[1]), dim=1)
+            if len(state_value.shape) > 3
+            else torch.cat((state_value, state[1]), dim=0)
         )
         state_value = self.conv3(state_value)
         state_value = self.linear_state(state_value)
-
+        # print(f"critic: state_value {state_value.shape}")
         action_value = nn.functional.relu(self.linear_action(action))
-
+        # print(f"critic: action_value {action_value.shape}")
         state_action_value = nn.functional.relu(torch.add(state_value, action_value))
+        # print(f"critic: state_action_value {state_action_value.shape}")
         state_action_value = self.linear_q(state_action_value)
-        return state_action_value
+
+        # print(f"in foward critic end w/o squeeze {state_action_value.shape}")
+        return state_action_value.squeeze()
 
 
 # CNN
@@ -101,21 +108,24 @@ class ActorNetwork(nn.Module):
 
     def forward(self, state):
         """
-        input:       [num_features, num_periods, num_assets]
+        input:      ([batch, num_features, num_periods, num_assets], [batch, 1 ,1 , num_assets])
         conv1:    -> [2, num_periods-2, num_assets]
         conv2:    -> [20, 1, num_assets]  + w_last = [21, 1, num_assets]
-        conv3:    -> [1, 1, num_assets] + cash_bias = [1, 1, num_assets + 1]
+        conv3:    -> [1, 1, num_assets] + cash_bias = [1, 1, num_assets (+ 1)]
         softmax:  -> [num_assets + 1] normalized to 1
         """
         # state is tuple (X_t, w_t-1)
         w_t_1 = state[1].clone().detach().to(self.device)
-        print(w_t_1.shape)
         x = state[0].clone().detach().to(self.device)
         x = nn.functional.relu(self.conv1(x))
         x = nn.functional.relu(self.conv2(x))
-        print(x.shape)
-        print(w_t_1.shape)
-        x = torch.cat((x, w_t_1), dim=0)
+        # print(x.shape)
+        # print(w_t_1.shape)
+        x = (
+            torch.cat((x, w_t_1), dim=1)
+            if len(x.shape) > 3
+            else torch.cat((x, w_t_1), dim=0)
+        )
         x = self.conv3(x).squeeze()
         # cash_bias = nn.Parameter(torch.zeros(1,1,1))
         # x = torch.cat((chash_bias, x), dim=2)

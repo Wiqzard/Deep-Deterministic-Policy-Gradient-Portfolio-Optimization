@@ -37,20 +37,20 @@ class PriceHistory:
         self.coins = [
             "BTC-USD",
             "ETH-USD",
+            "ADA-USD",
+            "SOL-USD",
+            "DOGE-USD",
+            "DOT-USD",
+            "DAI-USD",
+            "SHIB-USD",
         ]
-        # "ADA-USD",
-        #  "SOL-USD",
-        #  "DOGE-USD",
-        # "DOT-USD",
-        #  "DAI-USD",
-        #   "SHIB-USD",
-        #    "AVAX-USD",
-        #   "UNI-USD",
-        #    "WBTC-USD",
-        #  "ETC-USD",
-        #   "ATOM-USD",
-        #    "LINK-USD",
-        #    "LTC-USD",]
+        # "AVAX-USD",
+        # "UNI-USD",
+        # "WBTC-USD",
+        # "ETC-USD",
+        # "ATOM-USD",
+        # "LINK-USD",
+        # "LTC-USD",]
         self.num_features = num_features
         self.num_periods = num_periods
         self.num_assets = len(self.coins)

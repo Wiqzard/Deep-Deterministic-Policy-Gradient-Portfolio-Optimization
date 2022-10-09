@@ -1,9 +1,17 @@
 import datetime
 import logging
 import sqlite3
-import os
 from os import path
 import pandas as pd
+import requests
+
+import numpy as np
+from numpy import ndarray as ndarray
+import json
+import time
+from datetime import datetime, timedelta
+from random import randint
+from tqdm.auto import tqdm
 
 
 DATABASE_DIR = "coin_history.db"
@@ -23,6 +31,106 @@ YEAR = DAY * 365
 TABLE_NAME = "test"
 
 
+
+
+
+"""
+IDEA:
+    -> own table named "coin_history" for each individual coin
+        -> table has columns "date", "feature1", "feature2", "feature3"
+    
+
+
+"""
+class CoinDatabase:
+    def __init__(self):
+        self.__storage_period = FIVE_MINUTES
+        self.coins = self.coins = [
+            "BTC-USD",
+            "ETH-USD",
+            "ADA-USD",
+            "SOL-USD",
+            "DOGE-USD",
+            "DOT-USD",
+            "DAI-USD",
+            "SHIB-USD",
+        ]
+
+
+
+    def create_table(self, coin):
+        with sqlite3.connect(DATABASE_DIR) as connection:
+            cursor = connection.cursor()
+            cursor.execute(
+                'CREATE TABLE IF NOT EXISTS "{coin}"-History (date INTEGER,'
+                "low FLOAT, high FLOAT, "
+                " open FLOAT, close FLOAT, volume FLOAT, "
+                "PRIMARY KEY (date));".format(coin = coin)
+            )
+            connection.commit()
+
+    def create_all_tables(self):
+        for coin in self.coins:
+            coin = coin.split("-")[0]
+            self.create_table(coin)
+
+    def fill_table(self, idx):
+
+        with sqlite3.connect(DATABASE_DIR) as connection:
+
+    def retrieve_data(
+        self, ticker: str, granularity: int, start_date: str, end_date: str) -> pd.DataFrame:
+
+        if end_date is None:
+            end_date = datetime.now().strftime("%Y-%m-%d-%H-%M")
+
+        start_date_datetime = datetime.strptime(start_date, "%Y-%m-%d-%H-%M")
+        end_date_datetime = datetime.strptime(end_date, "%Y-%m-%d-%H-%M")
+
+        request_volume = (
+            abs((start_date_datetime - end_date_datetime).total_seconds()) / granularity
+            )
+        if request_volume <= 300:
+            response = requests.get(
+            "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
+             ticker, start_date, end_date, granularity
+                )
+            )
+        else:
+             max_per_mssg = 300
+            logging.info(f"Retrieve history for {ticker}")
+            pbar = tqdm(total=request_volume)
+            data = pd.DataFrame()
+            for i in range(int(request_volume / max_per_mssg) + 1):
+            provisional_start = start_date_datetime + timedelta(
+            0, i * (granularity * max_per_mssg)
+            )
+            provisional_end = start_date_datetime + timedelta(
+            0, (i + 1) * (granularity * max_per_mssg)
+            )
+            response = requests.get(
+            "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
+            ticker, provisional_start, provisional_end, granularity
+            )
+            )
+            if response.status_code in [200, 201, 202, 203, 204]:
+                pbar.update(max_per_mssg)
+
+                dataset = pd.DataFrame(json.loads(response.text))
+                if not dataset.empty:
+                    data = pd.concat([data, dataset], ignore_index=True, sort=False)
+                    time.sleep(randint(0, 2))
+                else:
+                    print("Something went wrong")
+        # pbar.close()
+            data.columns = ["time", "low", "high", "open", "close", "volume"]
+            data["time"] = pd.to_datetime(data["time"], unit="s")
+            data = data[data["time"].between(start_date_datetime, end_date_datetime)]
+            data.set_index("time", drop=True, inplace=True)
+            data.sort_index(ascending=True, inplace=True)
+            data.drop_duplicates(subset=None, keep="first", inplace=True)
+            return data
+
 class CoinHistory:
     # if offline ,the coin_list could be None
     # NOTE: return of the sqlite results is a list of tuples, each tuple is a row
@@ -41,17 +149,6 @@ class CoinHistory:
     def coins(self):
         return self.__coins
 
-    def initialize_db(self):
-        with sqlite3.connect(DATABASE_DIR) as connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                "CREATE TABLE IF NOT EXISTS History (date INTEGER,"
-                " coin varchar(20), high FLOAT, low FLOAT,"
-                " open FLOAT, close FLOAT, volume FLOAT, "
-                " quoteVolume FLOAT, weightedAverage FLOAT,"
-                "PRIMARY KEY (date, coin));"
-            )
-            connection.commit()
 
     def get_global_data_matrix(self, start, end, period=300, features=("close",)):
         """

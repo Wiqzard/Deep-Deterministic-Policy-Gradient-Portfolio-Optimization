@@ -8,7 +8,7 @@ from agent.agent import Agent
 
 NUM_FEATURES = 3
 NUM_PERIODS = 50
-NUM_ASSETS = 2
+NUM_ASSETS = 8
 GRANULARITY = 900
 input_dims = [NUM_FEATURES, NUM_PERIODS, NUM_ASSETS]
 
@@ -61,7 +61,12 @@ def main():
     # critic = CriticNetwork(beta=0.01, input_dims=input_dims, name="Critic")
     # q = critic(state, action_1)
     # print(q)
-
+    # state = (torch.rand((64, 3, 50, 2)), torch.rand((64, 1, 1, 2)))
+    # action = torch.rand(64, 1, 1, 2)
+    # critic = CriticNetwork(beta=0.01, input_dims=[3, 50, 2], name="Critic")
+    # critic.eval()
+    # state_value = critic(state, action)
+    # print(state_value.shape)
     """
     Agent
     """
@@ -74,7 +79,7 @@ def main():
         n_actions=NUM_ASSETS,  # NUM_ASSETS,
         batch_size=64,
     )
-    start_date = "2022-09-30-00-00"
+    start_date = "2022-08-30-00-00"
 
     env = Environment(
         num_features=NUM_FEATURES,
@@ -85,7 +90,7 @@ def main():
 
     score_history = []
     np.random.seed(0)
-    for _ in range(4):
+    for _ in range(50):
         done = False
         score = 0
         obs = env.reset()
@@ -96,20 +101,9 @@ def main():
             agent.learn()
             score += reward
             obs = new_state
+        print(score)
         score_history.append(score)
 
-    # obs = env.reset()
-    # action = agent.choose_action(obs)
-
-    # state, reward, done = env.step(action)
-    # print(f"state0: {state[0].shape}")
-    # print(f"reward: {reward}")
-    # print(f"{obs[0].shape}  {obs[1].shape}")
-
-    # print(action1)
-    #
-    # print(f"state {state[0]}")
-    #   print(f"total reward {total_reward}")
     return 0
 
 

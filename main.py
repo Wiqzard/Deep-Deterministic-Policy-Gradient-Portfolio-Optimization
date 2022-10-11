@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 
+from data_management.coin_database import CoinDatabase
 from data_management.environment import Environment
 from agent.networks import CriticNetwork, ActorNetwork
 from agent.agent import Agent
@@ -14,6 +15,17 @@ input_dims = [NUM_FEATURES, NUM_PERIODS, NUM_ASSETS]
 
 
 def main():
+    """
+    Database
+    """
+    # base = CoinDatabase()
+    # base.create_all_tables()
+    # base.fill_all_tables(granularity=900, start_date="2022-10-5-00-00", end_date=None)
+
+    #    test_shape_base = base.get_coin_data(
+    #       coin="BTC-USD", granularity=900, start_date="2022-10-5-00-00", end_date=None
+    #  ).shape[0]
+    # print(test_shape_base)
 
     """
     ENV
@@ -81,11 +93,18 @@ def main():
     )
     start_date = "2022-08-30-00-00"
 
+    data_base = CoinDatabase()
+    data_base.create_all_tables()
+    data_base.fill_all_tables(
+        granularity=900, start_date="2022-10-5-00-00", end_date=None
+    )
+
     env = Environment(
         num_features=NUM_FEATURES,
         num_periods=NUM_PERIODS,
         granularity=GRANULARITY,
         start_date=start_date,
+        data_base=data_base,
     )
 
     score_history = []

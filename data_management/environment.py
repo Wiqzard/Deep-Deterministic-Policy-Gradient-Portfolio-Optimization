@@ -1,3 +1,4 @@
+from pymysql import DatabaseError
 from data_management.data_manager import PriceHistory
 
 import numpy as np
@@ -11,6 +12,7 @@ class Environment:
         num_periods: int,
         granularity: int,
         start_date: str,
+        data_base,
         end_date: str = None,
     ):
 
@@ -21,13 +23,14 @@ class Environment:
         self.end_date = end_date
         self.commision_rate_selling = 0.0025
         self.commision_rate_purchasing = 0.0025
-
+        self.data_base = data_base
         self.state_space = PriceHistory(
             num_features=self.num_features,
             num_periods=self.num_periods,
             granularity=self.granularity,
             start_date=self.start_date,
             end_date=self.end_date,
+            data_base=data_base,
         )
         self.state_space.set_data_matrix()
 

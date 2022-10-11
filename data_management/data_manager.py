@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from random import randint
 from tqdm.auto import tqdm
 import logging
+from data_management.coin_database import CoinDatabase
 
 
 """
@@ -33,6 +34,7 @@ class PriceHistory:
         granularity: int = None,
         start_date: str = None,
         end_date: str = None,
+        data_base=None,
     ):
         self.coins = [
             "BTC-USD",
@@ -57,7 +59,8 @@ class PriceHistory:
         self.granularity = granularity
         self.start_date = start_date
         self.end_date = end_date
-        self.data_matrix = []  # np.empty(self.num_assets)
+        self.data_matrix = []  # np.empty(self.num_assets
+        self.data_base = data_base
 
     def retrieve_data(
         self, ticker: str, granularity: int, start_date: str, end_date: str
@@ -124,7 +127,16 @@ class PriceHistory:
         for (
             coin
         ) in self.coins:  # for i, coin in enumerate(self.coins): self.data_matrix[i] =
-            data = self.retrieve_data(coin, gran, s_date, e_date)
+            data = (
+                self.data_base.get_coin_data(
+                    coin=coin, granularity=gran, start_date=s_date, end_date=e_date
+                )
+                if self.data_base
+                else self.retrieve_data(
+                    ticker=coin, granularity=gran, start_data=s_date, end_date=e_date
+                )
+            )
+
             self.data_matrix.append(data)
 
     def normalized_price_martix_asset(

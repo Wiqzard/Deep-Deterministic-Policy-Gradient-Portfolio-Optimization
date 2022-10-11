@@ -13,7 +13,7 @@ class CriticNetwork(nn.Module):
         beta,
         input_dims: list[int, int, int],
         name,
-        chkpt_dir="/content/ddpg",
+        chkpt_dir="/agent/saved_models",
     ):
         super(CriticNetwork, self).__init__()
         self.input_dims = input_dims
@@ -79,7 +79,7 @@ class ActorNetwork(nn.Module):
         alpha,
         input_dims: list[int, int, int],
         name,
-        chkpt_dir="/content/ddpg",
+        chkpt_dir="/agent/saved_models",
     ):
         super(ActorNetwork, self).__init__()
         self.alpha = alpha

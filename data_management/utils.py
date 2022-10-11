@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 
 def get_date_minutes(date: str) -> int:

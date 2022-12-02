@@ -5,6 +5,8 @@ import math
 from utils.tools import logger
 from portfolio_manager.algorithms import *
 from environment.environment import Environment
+from agent.agent import Agent
+
 class Exp_Main:
     
 
@@ -18,11 +20,10 @@ class Exp_Main:
         self.train_benchmark = self._get_benchmark(args.benchmark_name, flag="train")
         self.test_benchmark = self._get_benchmark(args.benchmark_name, flag="test")
 
-       
-         
 
     def _set_agent(self) -> None:
-        pass
+        self.agent = Agent(self.args, flag="train")
+
 
     def _set_environment(self, flag: str) -> None:
         if self.flag == "train":
@@ -30,8 +31,6 @@ class Exp_Main:
         else:
             self.test_env = Environment(self.args, flag="test") 
 
-    def _one_episode(self):
-        pass 
 
     def _get_benchmark(self, model_name, flag: str="train"):
         args = self.args
@@ -64,6 +63,7 @@ class Exp_Main:
          
         logger.info(f"Episode: {episode} --- Train Value: {train_value:.2f} --- Test Value: {test_value:.2f}")
 
+
     def train(self, with_test:bool=False, resume:bool=False) -> None:
         # sourcery skip: hoist-statement-from-loop
         if resume:
@@ -87,6 +87,7 @@ class Exp_Main:
             self.log_episode_result(episode=episode, train_scores=train_scores, test_scores=test_scores) 
             if episode % 5 == 0:
                 self.agent.save_models()
+
 
     def backtest(self) -> None:
         score_history = []

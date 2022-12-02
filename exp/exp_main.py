@@ -33,21 +33,20 @@ class Exp_Main:
 
     def _get_benchmark(self, model_name, flag: str="train"):
         args = self.args
-
         model_map = {
-            "CRP": CRP(flag=flag), 
-            "UBAH": UBAH(flag=flag), 
-            "BCRP": BCRP(flag=flag), 
-            "BestMarkowitz": BestMarkowitz(flag=flag),
-            "UP": UP(flag=flag), 
-            "Anticor": Anticor(flag=flag), 
-            "OLMAR": OLMAR(flag=flag), 
-            "RMR": RMR(flag=flag)
-        }
+            "CRP": CRP, 
+            "UBAH": UBAH, 
+            "BCRP": BCRP, 
+            "BestMarkowitz": BestMarkowitz,
+            "UP": UP, 
+            "Anticor": Anticor, 
+            "OLMAR": OLMAR, 
+            "RMR": RMR
+        }   
         if model_name not in model_map:
             logger.warn(f"No model named {model_name}")
             return
-        model = model_map[model_name]
+        model = model_map[model_name](args, flag=flag)
         weights = model.run(model.X)
         return model.calculate_returns(weights)
 

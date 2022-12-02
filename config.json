@@ -1,7 +1,0 @@
-{
-    "input": {
-        "num_assets": 2,
-        "num_periods": 50,
-        "num_features": 3
-    }
-}

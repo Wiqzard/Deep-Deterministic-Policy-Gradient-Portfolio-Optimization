@@ -41,10 +41,12 @@ class UBAH(PortfolioManager):
     self.b = np.array(b) if b is not None else None
 
   def weights(self, X):
-     self.b = np.ones(8) /8
-     b = X.mul((self.b), axis=1)
-     b = b.div(b.sum(axis=1), axis=0)
-     return b
+    print("he")
+    print(X.shape) 
+    self.b = np.ones(8) / 8
+    b = X.mul((self.b), axis=1)
+    b = b.div(b.sum(axis=1), axis=0)
+    return b
 
 
 class BCRP(CRP):

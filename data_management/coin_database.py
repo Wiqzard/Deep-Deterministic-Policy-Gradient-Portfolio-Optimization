@@ -214,5 +214,4 @@ class CoinDatabase:
             df = df.sort_values("time")
             df["time"] = pd.to_datetime(df["time"], unit="m")
             df = df.reset_index(drop=True)
-            df.head()
             return df

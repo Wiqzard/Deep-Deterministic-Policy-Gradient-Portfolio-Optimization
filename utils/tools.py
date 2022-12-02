@@ -42,9 +42,9 @@ def train_test_split(ratio:float, granularity:int,  start_date: str, end_date: s
 
     diff_minutes = (end_date - start_date).total_seconds() / 60
     minutes_into_period = diff_minutes * ratio
-    minutes_into_period = round(minutes_into_period / granularity) * granularity
+    minutes_into_period = round(minutes_into_period / (granularity / 60)) * granularity/60
     date1 = start_date + timedelta(minutes=minutes_into_period)
-    date2 = date1 + timedelta(minutes=granularity)
+    date2 = date1 + timedelta(minutes=granularity / 60)
 
     start_date_train = start_date.strftime("%Y-%m-%d-%H-%M")
     end_date_train= date1.strftime("%Y-%m-%d-%H-%M")

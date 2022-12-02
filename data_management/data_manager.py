@@ -73,59 +73,7 @@ class PriceHistory(Dataset):
 
 
 
-    def retrieve_data(
-        self, ticker: str, granularity: int, start_date: str, end_date: str
-    ) -> pd.DataFrame:
-
-        if end_date is None:
-            end_date = datetime.now().strftime("%Y-%m-%d-%H-%M")
-
-        start_date_datetime = datetime.strptime(start_date, "%Y-%m-%d-%H-%M")
-        end_date_datetime = datetime.strptime(end_date, "%Y-%m-%d-%H-%M")
-
-        request_volume = (
-            abs((start_date_datetime - end_date_datetime).total_seconds()) / granularity
-        )
-        if request_volume <= 300:
-            response = requests.get(
-                "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
-                    ticker, start_date, end_date, granularity
-                )
-            )
-        else:
-            max_per_mssg = 300
-            logging.info(f"Retrieve history for {ticker}")
-            pbar = tqdm(total=request_volume)
-            data = pd.DataFrame()
-            for i in range(int(request_volume / max_per_mssg) + 1):
-                provisional_start = start_date_datetime + timedelta(
-                    0, i * (granularity * max_per_mssg)
-                )
-                provisional_end = start_date_datetime + timedelta(
-                    0, (i + 1) * (granularity * max_per_mssg)
-                )
-                response = requests.get(
-                    "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
-                        ticker, provisional_start, provisional_end, granularity
-                    )
-                )
-                if response.status_code in [200, 201, 202, 203, 204]:
-                    pbar.update(max_per_mssg)
-
-                    dataset = pd.DataFrame(json.loads(response.text))
-                    if not dataset.empty:
-                        data = pd.concat([data, dataset], ignore_index=True, sort=False)
-                        time.sleep(randint(0, 2))
-                else:
-                    print("Something went wrong")
-            # pbar.close()
-            data.columns = ["time", "low", "high", "open", "close", "volume"]
-            data["time"] = pd.to_datetime(data["time"], unit="s")
-            data = data[data["time"].between(start_date_datetime, end_date_datetime)]
-            data.set_index("time", drop=True, inplace=True)
-            data.sort_index(ascending=True, inplace=True)
-            data.drop_duplicates(subset=None, keep="first", inplace=True)
-            return data
+ 
 
     # Implement error handling
     def __set_data_matrix(

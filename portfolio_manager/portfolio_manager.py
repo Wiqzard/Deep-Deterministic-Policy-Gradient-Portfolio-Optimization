@@ -12,6 +12,7 @@ from utils.tools import train_test_split
 
 class PortfolioManager():
     PRICE_TYPE = "ratio"
+
     def __init__(self, args, commission_rate:float=0.025, min_history: Optional[int] = None, flag="train", frequency: int = 1, **kwargs) -> None:
         self.frequency = frequency
         self.min_history = min_history or 0
@@ -24,7 +25,7 @@ class PortfolioManager():
         else:
           self.commission_rate_selling = commission_rate
         self.state_space = PriceHistory(
-            num_features=NUM_FEATURES,
+            args,
             num_periods=args.seq_len,
             granularity=args.granularity,
             start_date=self.start_date,
@@ -38,16 +39,19 @@ class PortfolioManager():
         self.initial_weights = NUM_ASSETS * [1 / NUM_ASSETS]
         self.__set_X()
 
+
     def _set_dates(self, flag) -> None:
         start_date_train, end_date_train, start_date_test, end_date_test = train_test_split(self.args.ratio, self.args.granularity, self.args.start_date, self.args.end_date)
         self.start_date = start_date_train if flag=="train" else start_date_test
-        self.end_date = end_date_train if flag=="test" else end_date_test
+        self.end_date = end_date_test if flag=="test" else end_date_train
 
+ 
     def __set_X(self) -> None:
       self.X = self.state_space.filled_feature_matrices[0]
       self.X = self.X.rename(columns={"time": "date"}).set_index("date")
       self.X.columns.name = "Symbols"
       self.ratio = self._convert_prices(self.X, "ratio")
+
 
     def init_weights(self, columns):
         """Set initial weights.
@@ -55,11 +59,13 @@ class PortfolioManager():
         """
         return np.zeros(len(columns))
 
+
     def init_step(self, X):
         """Called before step method. Use to initialize persistent variables.
         :param X: Entire stock returns history.
         """
         pass
+
 
     def step(self, x, last_b, history=None):
         """Calculate new portfolio weights. If history parameter is omited, step
@@ -71,6 +77,7 @@ class PortfolioManager():
             performance.
         """
         raise NotImplementedError("Subclass must implement this!")
+
 
     def weights(self, X, min_history=None):
         """Return weights. Call step method to update portfolio sequentially."""
@@ -115,6 +122,7 @@ class PortfolioManager():
             B = pd.DataFrame(B, index=P.index, columns=P.columns)
         return B
     
+
     def _convert_prices(self, S, method):
         """Convert prices to format suitable for weight or step function.
             ratio:  pt / pt_1
@@ -125,8 +133,9 @@ class PortfolioManager():
             # normalize prices so that they start with 1.
             r = {}
             for name, s in S.items():
-                init_val = s.loc[s.first_valid_index()]
-                r[name] = s / init_val
+                if s.first_valid_index() is not None:
+                    init_val = s.loc[s.first_valid_index()]
+                    r[name] = s / init_val
             return pd.DataFrame(r)
         elif method == "absolute":
             return S
@@ -135,9 +144,10 @@ class PortfolioManager():
             # be careful about NaN values
             X = S / S.shift(1).fillna(method="ffill")
             for name, s in X.iteritems():
-                X[name].iloc[s.index.get_loc(s.first_valid_index()) - 1] = 1.0
-
+                if s.first_valid_index() is not None:
+                    X[name].iloc[s.index.get_loc(s.first_valid_index()) - 1] = 1.0
             return np.log(X) if method == "log" else X
+
 
     def calculate_returns(self, B=None):
       B = B if isinstance(B, pd.DataFrame) else self.run()
@@ -160,6 +170,7 @@ class PortfolioManager():
       self.r = np.maximum(self.r, 1e-10)
       self.r_log = np.log(self.r)
       return self.r
+
 
     def sharpe(self, r=None, rf_rate=0.0, alpha=0.0, freq="daily", sd_factor=1.0, w=None):
       r = r if isinstance(r, pd.Series) else self.calculate_returns()
@@ -192,6 +203,7 @@ class PortfolioManager():
       self._sharpe = sh
       return sh
 
+
     def to_rebalance(self, B, X):
         """
         :param X: price relatives (1 + r)
@@ -204,6 +216,7 @@ class PortfolioManager():
         hold_B = (B * X).div(E, axis=0)
         return B - hold_B.shift(1)
 
+
     def plot_portfolio_value(self, r=None):
       r = r if r.any() else self.calculate_returns()
       temp = self.start_value 
@@ -213,6 +226,7 @@ class PortfolioManager():
         temp *= return_
       plt.plot(portfolio_values, label=self.name)    
       #x r.index
+
 
     def plot_portfolio_weights(self, B=None):
       B = B if isinstance(B, pd.DataFrame) else self.run()

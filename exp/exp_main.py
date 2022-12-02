@@ -9,7 +9,6 @@ from agent.agent import Agent
 
 class Exp_Main:
     
-
     def __init__(self, args) -> None:
         self.args = args
 
@@ -34,24 +33,21 @@ class Exp_Main:
 
     def _get_benchmark(self, model_name, flag: str="train"):
         args = self.args
-        if model_name == "CRP":
-            model = CRP(flag=flag) 
-        elif model_name == "UBAH":
-            model = UBAH(flag=flag) 
-        elif model_name == "BCRP":
-            model = BCRP(flag=flag) 
-        elif model_name == "BestMarkowitz":
-            model = BestMarkowitz(flag=flag) 
-        elif model_name == "UP":
-            model = UP(flag=flag) 
-        elif model_name == "Anticor":
-            model = Anticor(flag=flag) 
-        elif model_name == "OLMAR":
-            model = OLMAR(flag=flag) 
-        elif model_name == "RMR":
-            model = RMR(flag=flag)
-        else:
+
+        model_map = {
+            "CRP": CRP(flag=flag), 
+            "UBAH": UBAH(flag=flag), 
+            "BCRP": BCRP(flag=flag), 
+            "BestMarkowitz": BestMarkowitz(flag=flag),
+            "UP": UP(flag=flag), 
+            "Anticor": Anticor(flag=flag), 
+            "OLMAR": OLMAR(flag=flag), 
+            "RMR": RMR(flag=flag)
+        }
+        if model_name not in model_map:
             logger.warn(f"No model named {model_name}")
+            return
+        model = model_map[model_name]
         weights = model.run(model.X)
         return model.calculate_returns(weights)
 

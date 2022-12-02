@@ -168,7 +168,7 @@ class PortfolioManager():
       elif freq == "daily":
         freq = 24 * 60 * 60 / self.state_space.granularity
       elif freq == "monthly":
-        freq = 30 * 24 * 60 * 60 / self.state_spcace.granularity
+        freq = 30 * 24 * 60 * 60 / self.state_space.granularity
       # adjust rf rate by frequency
       #rf = rf_rate / freq
       # subtract risk-free rate

@@ -1,35 +1,38 @@
 import numpy as np
 import math
 
+from utils.constants import *
+from utils.tools import train_test_split
 from data_management.data_manager import PriceHistory
 
 class Environment:
-    def __init__(self, config, flag="train", compute_before: bool = False) -> None:
-        self.config = config
-        self.compute_before = compute_before
-        self.start_date = config.start_date_train if flag=="train" else config.start_date_test
-        self.end_date = config.end_date_train if flag=="train" else config.end_date_test
+    def __init__(self, args, flag="train") -> None:
+        self.args = args 
+        self._set_dates(flag)
+        self.scale_state = False # For now
 
-        self.commission_rate_selling : float = config.commission_rate_purchasing
-        self.commission_rate_purchasing : float  = config.commission_rate_selling
         self.state_space = PriceHistory(
-            num_features=config.num_features,
-            num_periods=config.seq_len,
-            granularity=config.granularity,
+            num_features=NUM_FEATURES,
+            num_periods=args.seq_len,
+            granularity=args.granularity,
             start_date=self.start_date,
             end_date=self.end_date,
-            scale=config.scale_state
+            scale=self.scale_state
         )
 
-        if self.compute_before:
+        if args.compute_before:
           self.all_npms = self.state_space.filled_feature_matrices
         
-
-        self.period: int = 0
+        self.period = 0
         self.start_action = [1] + (self.state_space.num_assets - 1) * [0]
         self.reward_history = []
         self.state_history = []
         self.action_history = []
+
+    def _set_dates(self, flag) -> None:
+        start_date_train, end_date_train, start_date_test, end_date_test = train_test_split(self.args.ratio, self.args.granularity, self.args.start_date, self.args.end_date)
+        self.start_date = start_date_train if flag=="train" else start_date_test
+        self.end_date = end_date_train if flag=="test" else end_date_test
 
     def calculate_reward(self, state_action: dict) -> float:
         """
@@ -99,7 +102,7 @@ class Environment:
     def calculate_relative_price_episode(self) -> np.array:
         first_closes =  self.state_space[0][0]   
         last_closes = self.state_space[- (self.state_space.num_periods + self.state_space.pred_len+ 5)][1]
-        if config.scale_state:
+        if self.scale_state:
           first_closes = self.state_space.inverse_transform(first_closes)[0,:]
           last_closes = self.state_space.inverse_transform(last_closes)[-1,:]
         else:

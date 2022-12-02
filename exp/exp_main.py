@@ -4,7 +4,7 @@ import math
 
 from utils.tools import logger
 from portfolio_manager.algorithms import *
-
+from environment.environment import Environment
 class Exp_Main:
     
 
@@ -18,11 +18,17 @@ class Exp_Main:
         self.train_benchmark = self._get_benchmark(args.benchmark_name, flag="train")
         self.test_benchmark = self._get_benchmark(args.benchmark_name, flag="test")
 
+       
+         
+
     def _set_agent(self) -> None:
         pass
 
-    def _set_environment(self) -> None:
-        pass
+    def _set_environment(self, flag: str) -> None:
+        if self.flag == "train":
+            self.train_env = Environment(self.args, flag="train")
+        else:
+            self.test_env = Environment(self.args, flag="test") 
 
     def _one_episode(self):
         pass 
@@ -58,8 +64,10 @@ class Exp_Main:
          
         logger.info(f"Episode: {episode} --- Train Value: {train_value:.2f} --- Test Value: {test_value:.2f}")
 
-    def train(self, with_test:bool=False) -> None:
+    def train(self, with_test:bool=False, resume:bool=False) -> None:
         # sourcery skip: hoist-statement-from-loop
+        if resume:
+            self.agent.load_models()
         score_history = []
         logger.info(f"Start Training: \n Benchmark: {self.args.benchmark_name} --- Train Value: {self.train_benchmark:.2f} --- Test Value: {self.test_benchmark:.2f}")
         for episode in range(self.args.episodes):
@@ -77,6 +85,8 @@ class Exp_Main:
 
             test_scores = self.backtest() if with_test else None
             self.log_episode_result(episode=episode, train_scores=train_scores, test_scores=test_scores) 
+            if episode % 5 == 0:
+                self.agent.save_models()
 
     def backtest(self) -> None:
         score_history = []

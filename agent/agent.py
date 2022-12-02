@@ -8,21 +8,24 @@ from agent.noise import OUActionNoise
 from agent.replay_buffer import ReplayBuffer
 from agent.networks import CriticNetwork, ActorNetwork
 
+from utils.constants import *
 
 class Agent(object):
-    def __init__(self,config, flag="train"):
+    def __init__(self, args, flag="train"):
 
-        self.config = config
+        self.args = args 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.flag = flag
-        self.memory = ReplayBuffer(config)
+        self.memory = ReplayBuffer(args)
 
-        self.actor = ActorNetwork(config)
+        self.actor = ActorNetwork(args, name="actor")
         self.target_actor = copy.deepcopy(self.actor)
-        self.critic = CriticNetwork(config)
+        self.target_actor.name = "target_actor"
+        self.critic = CriticNetwork(args)
         self.target_critic = copy.deepcopy(self.critic)
+        self.target_actor.name = "target_critic"
 
-        self.noise = OUActionNoise(config=config, mu=np.zeros(config.num_assets))
+        self.noise = OUActionNoise(args=args, mu=np.zeros(NUM_ASSETS))
 
         #self.update_network_parameters(tau=self.tau)
         self.MSE = nn.MSELoss()
@@ -38,29 +41,29 @@ class Agent(object):
             self.__add_dim(oberservation[1])
             )
         mu = self.actor(oberservation).to(self.device)
-        if self.flag == "train" and self.config.noise == "OU":
+        if flag == "train" and self.args.noise == "OU":
             noise = torch.tensor(self.noise()).float().to(self.device)
             mu_prime = mu + noise
             mu_prime = nn.functional.softmax(mu_prime)
-        elif self.flag == "train" and self.config.noise == "randn": 
-            #noise = torch.abs(torch.randn_like(mu)*self.config.sigma).to(self.device) 
-            noise = (torch.randn_like(mu)*self.config.sigma).to(self.device) 
+        elif self.flag == "train" and self.args.noise == "randn": 
+            #noise = torch.abs(torch.randn_like(mu)*self.args.sigma).to(self.device) 
+            noise = (torch.randn_like(mu)*self.args.sigma).to(self.device) 
             mu_prime = mu + noise
             #mu_prime /= torch.sum(mu_prime)
             mu_prime = nn.functional.softmax(mu_prime)
         else:
             mu_prime = mu
         self.actor.train()
-        return mu_prime.cpu().detach().numpy()########
+        return mu_prime.cpu().detach().numpy()
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
 
     def learn(self):
-        if self.memory.mem_cntr < self.config.batch_size:
+        if self.memory.mem_cntr < self.args.batch_size:
             return
         state, action, reward, new_state, done = self.memory.sample_buffer(
-            self.config.batch_size
+            self.args.batch_size
         )
         
         reward = torch.tensor(reward).float().to(self.critic.device)
@@ -88,11 +91,11 @@ class Agent(object):
         critic_value = self.critic.forward(state, action)
 
         target = [
-            reward[j] + self.config.gamma * critic_value_[j] * (1-done[j])
-            for j in range(self.config.batch_size)
+            reward[j] + self.args.gamma * critic_value_[j] * (1-done[j])
+            for j in range(self.args.batch_size)
         ]
         target = torch.tensor(target).float().to(self.critic.device)
-        target = target.view(self.config.batch_size, 1).squeeze()
+        target = target.view(self.args.batch_size, 1).squeeze()
 
         #self.critic.train()i
         self.critic.zero_grad()#.optimizer.zero_grad()
@@ -114,7 +117,7 @@ class Agent(object):
 
 
     def update_network_parameters(self, tau=None):
-        self.tau = self.config.tau
+        self.tau = self.args.tau
         for target_param, param in zip(self.target_actor.parameters(), self.actor.parameters()):
             target_param.data.copy_(param.data * self.tau + target_param.data * (1.0 - self.tau))
        

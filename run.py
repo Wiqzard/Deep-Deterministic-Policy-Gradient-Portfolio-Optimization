@@ -14,11 +14,25 @@ if args.fill_database:
     data_base.fill_all_tables(
       granularity=args.granularity, start_date=args.start_date, end_date=args.end_date
     )
+#agent
+args.noise = "OU" #"randn"
+args.sigma = 
+args.theta = 
+args.dt = 
+args.x0 = 
+args.batch_size = 
+args.gamma = 
+args.tau = 
 
+#Networks
+args.critic_learning_rate =
+args.actor_learning_rate = 
+args.chkpt_dir = "outputs/ddpg"
 #training
 args.episodes = 500
-
-
+args.ratio = 0.8
+args.benchmark_name = "UBAH"
+args.compute_before = False
 args.seq_len = 50
 #database stuff
 args.database_path = "coin_history.db"

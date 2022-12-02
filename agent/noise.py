@@ -2,12 +2,12 @@ import numpy as np
 
 
 class OUActionNoise(object):
-    def __init__(self, mu:float, config, x0:float=None) -> None:
-        self.theta = config.theta
+    def __init__(self, mu:float, args, x0:float=None) -> None:
+        self.theta = args.theta
         self.mu = mu
-        self.sigma = config.sigma
-        self.dt = config.dt
-        self.x0 = config.x0
+        self.sigma = args.sigma
+        self.dt = args.dt
+        self.x0 = args.x0
         self.reset()
 
     def __call__(self):

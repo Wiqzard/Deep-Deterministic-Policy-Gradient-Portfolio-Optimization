@@ -8,11 +8,11 @@ class CRP(PortfolioManager):
     """Constant rebalanced portfolio = use fixed weights all the time. Uniform weights
     are commonly used as a benchmark."""
 
-    def __init__(self, b=None):
+    def __init__(self,flag, b=None):
         """
         :params b: Constant rebalanced portfolio weights. Default is uniform.
         """
-        super().__init__()
+        super().__init__(flag=flag)
         self.name = "CRP"
         self.b = np.array(b) if b is not None else None
 
@@ -35,8 +35,8 @@ class CRP(PortfolioManager):
 
 class UBAH(PortfolioManager):
   PRICE_TYPE = "raw"
-  def __init__(self, b=None):
-    super().__init__()
+  def __init__(self, flag, b=None):
+    super().__init__(flag=flag)
     self.name = "UBAH"
     self.b = np.array(b) if b is not None else None
 
@@ -52,8 +52,8 @@ class BCRP(CRP):
     with hindsight.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__()
+    def __init__(self, flag, **kwargs):
+        super().__init__(flag=flag)
         self.opt_weights_kwargs = kwargs
         self.name = "BCRP"
         
@@ -71,8 +71,8 @@ class BestMarkowitz(CRP):
     """Optimal Markowitz portfolio constructed in hindsight.
     """
 
-    def __init__(self, global_sharpe=None, sharpe=None, **kwargs):
-        super().__init__()
+    def __init__(self, flag, global_sharpe=None, sharpe=None, **kwargs):
+        super().__init__(flag=flag)
         self.global_sharpe = global_sharpe
         self._sharpe = sharpe
         self.opt_markowitz_kwargs = kwargs
@@ -106,7 +106,7 @@ class UP(PortfolioManager):
         contain negative positions).
     """
 
-    def __init__(self, eval_points=1e4, leverage=1.0):
+    def __init__(self, flag, eval_points=1e4, leverage=1.0):
         """
         :param eval_points: Number of evaluated points (approximately). Complexity of the
             algorithm is O(time * eval_points * nr_assets**2) because of matrix multiplication.
@@ -114,7 +114,7 @@ class UP(PortfolioManager):
             leverage == 1/nr_stocks to uniform CRP. leverage > 1 allows negative weights
             in portfolio.
         """
-        super().__init__()
+        super().__init__(flag=flag)
         self.name = "UP"
         self.eval_points = int(eval_points)
         self.leverage = leverage
@@ -148,12 +148,12 @@ class Anticor(PortfolioManager):
     autocorrelation to adjust the portfolio.
     """
 
-    def __init__(self, window=30):
+    def __init__(self, flag, window=30):
         """
         :param window: Window parameter.
         :param c_version: Use c_version, up to 10x speed-up.
         """
-        super().__init__()
+        super().__init__(flag)
         self.window = window
         self.name = "Anticor"
         
@@ -199,14 +199,14 @@ class OLMAR(PortfolioManager):
     """
 
     PRICE_TYPE = "raw"
-    def __init__(self, window=5, eps=10):
+    def __init__(self, flag, window=5, eps=10):
         """
         :param window: Lookback window.
         :param eps: Constraint on return for new weights on last price (average of prices).
             x * w >= eps for new weights w.
         """
 
-        super().__init__(min_history=window)
+        super().__init__(flag, min_history=window)
         self.name = "OLMAR"
         # input check
         if window < 2:
@@ -258,7 +258,7 @@ class RMR(OLMAR):
 
     PRICE_TYPE = "raw"
 
-    def __init__(self, window=5, eps=10.0, tau=0.001):
+    def __init__(self, flag, window=5, eps=10.0, tau=0.001):
         """
         :param window: Lookback window.
         :param eps: Constraint on return for new weights on last price (average of prices).
@@ -266,7 +266,7 @@ class RMR(OLMAR):
         :param tau: Precision for finding median. Recommended value is around 0.001. Strongly
                     affects algo speed.
         """
-        super().__init__(window, eps)
+        super().__init__(flag, window, eps)
         self.tau = tau
         self.name = "RMR"
 

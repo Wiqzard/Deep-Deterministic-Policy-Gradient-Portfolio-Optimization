@@ -16,6 +16,6 @@ YEAR = DAY * 365
 COINS = [ "BTC-USD", "ETH-USD", "ADA-USD",
                   "DOGE-USD",  "SOL-USD", "DOT-USD",
                   "LTC-USD","CRO-USD"]
-
+FEATURES = ["low", "high", "open", "close", "volume"]
 NUM_ASSETS = len(COINS)
 NUM_FEATURES = 3

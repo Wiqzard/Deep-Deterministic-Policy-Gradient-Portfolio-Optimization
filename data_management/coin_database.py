@@ -6,12 +6,11 @@ import time
 from numpy import ndarray as ndarray
 from datetime import datetime, timedelta
 from random import randint
-from tqdm.auto import tqdm
-import logging
+from tqdm import tqdm
 import sqlite3
 
 
-from utils.tools import get_date_minutes
+from utils.tools import get_date_minutes, logger
 from utils.constants import * 
 
 
@@ -19,7 +18,7 @@ from utils.constants import *
 class CoinDatabase:
     def __init__(self, args):
         self.__storage_period = FIVE_MINUTES
-        self.features = ["low", "high", "open", "close", "volume"]
+        self.features = FEATURES
         self.coins = COINS 
         self.database_path = args.database_path 
 
@@ -57,18 +56,23 @@ class CoinDatabase:
             start_date=start_date,
             end_date=end_date,
         )
-        with sqlite3.connect(self.database_path) as connection:
-            table_name = f"{coin_ticker}-History"
-            data.to_sql(table_name, connection, if_exists="replace", index=False)
-            connection.commit()
+        try:
+            with sqlite3.connect(self.database_path) as connection:
+                table_name = f"{coin_ticker}-History"
+                data.to_sql(table_name, connection, if_exists="replace", index=False)
+                connection.commit()
+        except ValueError as e:
+            raise ValueError("Retrieved data is None") from e
+
 
     def fill_all_tables(self, granularity, start_date, end_date) -> None:
         for coin in self.coins:
             self.fill_table(coin, granularity, start_date, end_date)
 
+
     def retrieve_data(
         self, ticker: str, granularity: int, start_date: str, end_date: str
-    ) -> pd.DataFrame:
+    ) -> pd.DataFrame:  # sourcery skip: assign-if-exp, extract-method, inline-immediately-returned-variable
 
         if end_date is None:
             end_date = datetime.now().strftime("%Y-%m-%d-%H-%M")
@@ -80,20 +84,34 @@ class CoinDatabase:
             abs((start_date_datetime - end_date_datetime).total_seconds()) / granularity
         )
         if request_volume <= 300:
-            response = requests.get(
-                "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
-                    ticker, start_date, end_date, granularity
-                )
-            )
+            data = self.retrieve_data_single_request(ticker, start_date_datetime, end_date_datetime, granularity)
         else:
-            return self._request_package(ticker, request_volume, start_date_datetime, granularity)
+            data = self.retrieve_data_multiple_requests(ticker, start_date_datetime, request_volume, granularity)
+        
+        data.columns = ["time", "low", "high", "open", "close", "volume"]
+        data["time"] = data["time"] / 60  # s
+        data["time"] = data["time"].astype(int)
+        return data
 
-    def _request_package(self, ticker, request_volume, start_date_datetime, granularity):
+
+    def retrieve_data_single_request(self, ticker, start_date, end_date, granularity):
+        response = requests.get(
+            "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
+                ticker, start_date, end_date, granularity
+            )
+        )
+        if response.status_code in [200, 201, 202, 203, 204]:
+            data = pd.DataFrame(json.loads(response.text))
+        else:
+            raise ValueError(f"Received non-success response code: {response.status_code}")
+        return data
+
+
+    def retrieve_data_multiple_requests(self, ticker, start_date_datetime, request_volume, granularity):
         max_per_mssg = 300
-        logging.info(f"Retrieve history for {ticker}")
-        pbar = tqdm(total=request_volume)
+        logger.info(f"Retrieve history for {ticker}")
         data = pd.DataFrame()
-        for i in range(int(request_volume / max_per_mssg) + 1):
+        for i in tqdm(range(int(request_volume / max_per_mssg) + 1), position=0, leave=True):
             provisional_start = start_date_datetime + timedelta(
                 0, i * (granularity * max_per_mssg)
             )
@@ -105,20 +123,62 @@ class CoinDatabase:
                     ticker, provisional_start, provisional_end, granularity
                 )
             )
-            if response.status_code in [200, 201, 202, 203, 204]:
-                pbar.update(max_per_mssg)
+            if response.status_code not in [200, 201, 202, 203, 204]:
+                raise ValueError(f"Received non-success response code: {response.status_code}")
 
-                dataset = pd.DataFrame(json.loads(response.text))
-                if not dataset.empty:
-                    data = pd.concat([data, dataset], ignore_index=True, sort=False)
-                    time.sleep(randint(0, 2))
-            else:
-                print("Something went wrong")
-        #pbar.close()
-        data.columns = ["time", "low", "high", "open", "close", "volume"]
-        data["time"] = data["time"] / 60  # s
-        data["time"] = data["time"].astype(int)
+            dataset = pd.DataFrame(json.loads(response.text))
+            if not dataset.empty:
+                data = pd.concat([data, dataset], ignore_index=True, sort=False)
+                time.sleep(randint(0, 1))
         return data
+
+
+#    def retrieve_data(
+#        self, ticker: str, granularity: int, start_date: str, end_date: str
+#    ) -> pd.DataFrame:  # sourcery skip: extract-method
+#
+#        if end_date is None:
+#            end_date = datetime.now().strftime("%Y-%m-%d-%H-%M")
+#
+#        start_date_datetime = datetime.strptime(start_date, "%Y-%m-%d-%H-%M")
+#        end_date_datetime = datetime.strptime(end_date, "%Y-%m-%d-%H-%M")
+#
+#        request_volume = (
+#            abs((start_date_datetime - end_date_datetime).total_seconds()) / granularity
+#        )
+#        if request_volume <= 300:
+#            response = requests.get(
+#                "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
+#                    ticker, start_date, end_date, granularity
+#                )
+#            )
+#        else:
+#            max_per_mssg = 300
+#            logger.info(f"Retrieve history for {ticker}")
+#            data = pd.DataFrame()
+#            for i in tqdm(range(int(request_volume / max_per_mssg) + 1), position=0, leave=True):
+#                provisional_start = start_date_datetime + timedelta(
+#                    0, i * (granularity * max_per_mssg)
+#                )
+#                provisional_end = start_date_datetime + timedelta(
+#                    0, (i + 1) * (granularity * max_per_mssg)
+#                )
+#                response = requests.get(
+#                    "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
+#                        ticker, provisional_start, provisional_end, granularity
+#                    )
+#                )
+#                if response.status_code in [200, 201, 202, 203, 204]:
+#                    dataset = pd.DataFrame(json.loads(response.text))
+#                    if not dataset.empty:
+#                        data = pd.concat([data, dataset], ignore_index=True, sort=False)
+#                        time.sleep(randint(0, 2))
+#                else:
+#                    print("Something went wrong")
+#            data.columns = ["time", "low", "high", "open", "close", "volume"]
+#            data["time"] = data["time"] / 60  # s
+#            data["time"] = data["time"].astype(int)
+#            return data
 
     def get_coin_data(
         self, coin: str, granularity, start_date: str, end_date: str

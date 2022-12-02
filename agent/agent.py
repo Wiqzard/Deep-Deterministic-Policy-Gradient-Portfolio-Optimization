@@ -21,7 +21,7 @@ class Agent(object):
         self.actor = ActorNetwork(args, name="actor")
         self.target_actor = copy.deepcopy(self.actor)
         self.target_actor.name = "target_actor"
-        self.critic = CriticNetwork(args)
+        self.critic = CriticNetwork(args, name="critic")
         self.target_critic = copy.deepcopy(self.critic)
         self.target_actor.name = "target_critic"
 

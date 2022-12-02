@@ -24,8 +24,8 @@ class Exp_Main:
         self.agent = Agent(self.args, flag="train")
 
 
-    def _set_environment(self, flag: str) -> None:
-        if self.flag == "train":
+    def _set_environment(self, flag) -> None:
+        if flag == "train":
             self.train_env = Environment(self.args, flag="train")
         else:
             self.test_env = Environment(self.args, flag="test") 

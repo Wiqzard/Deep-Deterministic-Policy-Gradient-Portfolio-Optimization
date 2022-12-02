@@ -15,7 +15,7 @@ from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
 from typing import List, Tuple
 
-from coin_database import CoinDatabase
+from data_management.coin_database import CoinDatabase
 from utils.constants import COINS
 from agent.time_features import time_features
 
@@ -34,7 +34,7 @@ class PriceHistory(Dataset):
     """ 
     def __init__(
         self,
-        num_features: int,
+        args,
         num_periods: int,
         granularity: int = None,
         start_date: str = None,
@@ -44,15 +44,13 @@ class PriceHistory(Dataset):
         timeenc: int=1,
         scale: bool=False
     ):
-        self.coins = COINS 
-        self.num_features = num_features
+        self.coins = COINS
         self.num_periods = num_periods
-        self.num_assets = len(self.coins)
         self.granularity = granularity
         self.start_date = start_date
         self.end_date = end_date
         self.data_matrix = [] 
-        self.data_base = CoinDatabase()
+        self.data_base = CoinDatabase(args)
         self.timeenc = timeenc
 
         self.label_len = label_len

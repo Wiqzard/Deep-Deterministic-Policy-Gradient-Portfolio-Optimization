@@ -19,7 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description="DDPG Portfolio Optimization")
 
     parser.add_argument(
-        "--is_training", type=int, required=True, default=1, help="status"
+        "--is_training", action="store_true", default=True, help="status"
     )
 
     parser.add_argument("--noise", type=str, default="OU", help="type of noise to use for the DDPG agent")

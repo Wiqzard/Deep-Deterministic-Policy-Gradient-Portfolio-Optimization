@@ -12,7 +12,7 @@ class Environment:
         self.scale_state = False # For now
 
         self.state_space = PriceHistory(
-            num_features=NUM_FEATURES,
+            args=args,
             num_periods=args.seq_len,
             granularity=args.granularity,
             start_date=self.start_date,
@@ -24,7 +24,7 @@ class Environment:
           self.all_npms = self.state_space.filled_feature_matrices
         
         self.period = 0
-        self.start_action = [1] + (self.state_space.num_assets - 1) * [0]
+        self.start_action = [1] + (NUM_ASSETS - 1) * [0]
         self.reward_history = []
         self.state_history = []
         self.action_history = []

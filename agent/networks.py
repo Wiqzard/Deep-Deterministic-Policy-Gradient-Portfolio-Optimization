@@ -10,7 +10,7 @@ class CriticNetwork(nn.Module):
     def __init__(self, args, name):
         super(CriticNetwork, self).__init__()
         self.args = args
-        
+
         self.conv1 = nn.Conv2d(
             in_channels=NUM_FEATURES, out_channels=2, kernel_size=(3, 1)
         )
@@ -34,7 +34,7 @@ class CriticNetwork(nn.Module):
         self.to(self.device)
 
         chkpt_dir = args.chkpt_dir
-        self.checkpoint_file = os.path.join(chkpt_dir, name = "_ddpg") 
+        self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg") 
 
     def save_checkpoint(self):
         print("... saving checkpoint ...")
@@ -63,15 +63,15 @@ class CriticNetwork(nn.Module):
 # CNN
 class ActorNetwork(nn.Module):
     def __init__(self, args, name):
-    
+
         super(ActorNetwork, self).__init__()
-        self.args = args 
+        self.args = args
         self.conv1 = nn.Conv2d(
             in_channels=NUM_FEATURES, out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
             in_channels=2, out_channels=20, kernel_size=(args.seq_len - 2, 1))
-        
+
         self.conv3 = nn.Conv2d(in_channels=21, out_channels=1, kernel_size=(1, 1))
         self.linear = nn.Linear(in_features=NUM_ASSETS, out_features=NUM_FEATURES)
         self.relu = nn.ReLU()
@@ -82,7 +82,7 @@ class ActorNetwork(nn.Module):
         self.to(self.device)
 
         chkpt_dir = args.chkpt_dir
-        self.checkpoint_file = os.path.join(chkpt_dir, name = "_ddpg") 
+        self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg") 
 
     def save_checkpoint(self):
         print("... saving checkpoint ...")

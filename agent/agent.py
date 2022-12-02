@@ -1,129 +1,110 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import copy
+
 from agent.noise import OUActionNoise
 from agent.replay_buffer import ReplayBuffer
 from agent.networks import CriticNetwork, ActorNetwork
 
 
 class Agent(object):
-    def __init__(
-        self,
-        alpha: float,
-        beta: float,
-        input_dims: list[int, int, int],
-        tau: float,
-        # env,
-        n_actions: int,
-        gamma=0.99,
-        max_size=1000000,
-        batch_size=64,
-    ):
-        """
-        critic
-        beta, num_features, num_periods, num_assets,name
+    def __init__(self,config, flag="train"):
 
-        replay
-        self, max_size, input_shape, n_actions
-        """
-        self.gamma = gamma
-        self.tau = tau
-        self.batch_size = batch_size
+        self.config = config
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.flag = flag
+        self.memory = ReplayBuffer(config)
 
-        # input
-        self.memory = ReplayBuffer(max_size, input_dims, n_actions)
+        self.actor = ActorNetwork(config)
+        self.target_actor = copy.deepcopy(self.actor)
+        self.critic = CriticNetwork(config)
+        self.target_critic = copy.deepcopy(self.critic)
 
-        self.actor = ActorNetwork(alpha, input_dims, name="Actor")
-        self.target_actor = ActorNetwork(alpha, input_dims, name="TargetActor")
-        self.critic = CriticNetwork(beta, input_dims, name="Critic")
-        self.target_critic = CriticNetwork(beta, input_dims, name="TargetCritic")
+        self.noise = OUActionNoise(config=config, mu=np.zeros(config.num_assets))
 
-        self.noise = OUActionNoise(mu=np.zeros(n_actions))
+        #self.update_network_parameters(tau=self.tau)
+        self.MSE = nn.MSELoss()
+    
+    def __add_dim(self, array:np.array) -> torch.Tensor:
+        tensor = torch.tensor(array).float().to(self.device)
+        return tensor.unsqueeze(0) if len(tensor.shape) in {1, 3} else tensor
 
-        self.update_network_parameters(tau=1)
-
-    def choose_action(self, oberservation):
+    def choose_action(self, oberservation, flag="train"):
         self.actor.eval()
-        # oberservation = torch.tensor(oberservation).to(self.actor.device)
-        # print(
-        #    f"choose action: obs = {oberservation[0].shape} and {oberservation[1].shape}"
-        # )
         oberservation = (
-            torch.tensor(oberservation[0], dtype=torch.float),
-            torch.tensor(oberservation[1], dtype=torch.float).unsqueeze(0).unsqueeze(0),
-        )
-        mu = self.actor(oberservation).to(self.actor.device)
-        mu_prime = mu + torch.tensor(self.noise(), dtype=torch.float).to(
-            self.actor.device
-        )
-        mu_prime = mu_prime / torch.sum(mu_prime)
+            self.__add_dim(oberservation[0]),
+            self.__add_dim(oberservation[1])
+            )
+        mu = self.actor(oberservation).to(self.device)
+        if self.flag == "train" and self.config.noise == "OU":
+            noise = torch.tensor(self.noise()).float().to(self.device)
+            mu_prime = mu + noise
+            mu_prime = nn.functional.softmax(mu_prime)
+        elif self.flag == "train" and self.config.noise == "randn": 
+            #noise = torch.abs(torch.randn_like(mu)*self.config.sigma).to(self.device) 
+            noise = (torch.randn_like(mu)*self.config.sigma).to(self.device) 
+            mu_prime = mu + noise
+            #mu_prime /= torch.sum(mu_prime)
+            mu_prime = nn.functional.softmax(mu_prime)
+        else:
+            mu_prime = mu
         self.actor.train()
-        return mu_prime.cpu().detach().numpy()
+        return mu_prime.cpu().detach().numpy()########
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
 
     def learn(self):
-        if self.memory.mem_cntr < self.batch_size:
+        if self.memory.mem_cntr < self.config.batch_size:
             return
         state, action, reward, new_state, done = self.memory.sample_buffer(
-            self.batch_size
+            self.config.batch_size
         )
-        reward = torch.tensor(reward, dtype=torch.float).to(self.critic.device)
-        done = torch.tensor(done, dtype=torch.float).to(self.critic.device)
+        
+        reward = torch.tensor(reward).float().to(self.critic.device)
+        done = torch.tensor(done).float().to(self.critic.device)
         new_state = (
-            torch.tensor(new_state[0], dtype=torch.float).to(self.critic.device),
-            torch.tensor(new_state[1], dtype=torch.float)
-            .unsqueeze(1)
-            .unsqueeze(1)
+            torch.tensor(new_state[0]).float().to(self.critic.device),
+            torch.tensor(new_state[1]).float()
             .to(self.critic.device),
         )
         action = (
-            torch.tensor(action, dtype=torch.float)
-            .unsqueeze(1)
-            .unsqueeze(1)
+            torch.tensor(action).float()
             .to(self.critic.device)
         )
         state = (
-            torch.tensor(state[0], dtype=torch.float).to(self.critic.device),
-            torch.tensor(state[1], dtype=torch.float)
-            .unsqueeze(1)
-            .unsqueeze(1)
+            torch.tensor(state[0]).float().to(self.critic.device),
+            torch.tensor(state[1]).float()
             .to(self.critic.device),
         )
+        #self.target_actor.eval()
+        #self.target_critic.eval()
+        #self.critic.eval()
 
-        self.target_actor.eval()
-        self.target_critic.eval()
-        self.critic.eval()
-
-        target_actions = self.target_actor.forward(new_state).unsqueeze(1).unsqueeze(1)
+        target_actions = self.target_actor.forward(new_state)
         critic_value_ = self.target_critic.forward(new_state, target_actions)
         critic_value = self.critic.forward(state, action)
 
-        # print(f"state: {state[0].shape} and {state[1].shape}")
-        # print(f"action: {action.shape}")
-        # print(f"new_state: {new_state[0].shape} and {new_state[1].shape}")
-        # print(f"target_actions: {target_actions.shape}")
-        # print(f"critic_value : {critic_value_.shape}")
-        # print(f"critic_value_ : {critic_value_.shape}")
-
         target = [
-            reward[j] + self.gamma * critic_value_[j] * done[j]
-            for j in range(self.batch_size)
+            reward[j] + self.config.gamma * critic_value_[j] * (1-done[j])
+            for j in range(self.config.batch_size)
         ]
-        target = torch.tensor(target, dtype=torch.float).to(self.critic.device)
-        target = target.view(self.batch_size, 1).squeeze()
+        target = torch.tensor(target).float().to(self.critic.device)
+        target = target.view(self.config.batch_size, 1).squeeze()
 
-        self.critic.train()
-        self.critic.optimizer.zero_grad()
-        critic_loss = F.mse_loss(target, critic_value)
+        #self.critic.train()i
+        self.critic.zero_grad()#.optimizer.zero_grad()
+
+        critic_loss = self.MSE(target, critic_value)
         critic_loss.backward()
         self.critic.optimizer.step()
 
-        self.critic.eval()
-        self.actor.optimizer.zero_grad()
-        mu = self.actor.forward(state).unsqueeze(1).unsqueeze(1)
-        self.actor.train()
+        #self.critic.eval()
+        self.actor.zero_grad()#optimizer.zero_grad()
+        mu = self.actor.forward(state)#.unsqueeze(1).unsqueeze(1)
+        #self.actor.train()
         actor_loss = -self.critic.forward(state, mu)
         actor_loss = torch.mean(actor_loss)
         actor_loss.backward()
@@ -131,35 +112,15 @@ class Agent(object):
 
         self.update_network_parameters()
 
+
     def update_network_parameters(self, tau=None):
-        if tau is None:
-            tau = self.tau
+        self.tau = self.config.tau
+        for target_param, param in zip(self.target_actor.parameters(), self.actor.parameters()):
+            target_param.data.copy_(param.data * self.tau + target_param.data * (1.0 - self.tau))
+       
+        for target_param, param in zip(self.target_critic.parameters(), self.critic.parameters()):
+            target_param.data.copy_(param.data * self.tau + target_param.data * (1.0 - self.tau))
 
-        actor_params = self.actor.named_parameters()
-        critic_params = self.critic.named_parameters()
-        target_actor_params = self.target_actor.named_parameters()
-        target_critic_params = self.target_critic.named_parameters()
-
-        actor_state_dict = dict(actor_params)
-        critic_state_dict = dict(critic_params)
-        target_actor_dict = dict(target_actor_params)
-        target_critic_dict = dict(target_critic_params)
-
-        for name in actor_state_dict:
-            actor_state_dict[name] = (
-                tau * actor_state_dict[name].clone()
-                + (1 - tau) * target_actor_dict[name].clone()
-            )
-
-        self.target_actor.load_state_dict(actor_state_dict)
-
-        for name in critic_state_dict:
-            critic_state_dict[name] = (
-                tau * critic_state_dict[name].clone()
-                + (1 - tau) * target_critic_dict[name].clone()
-            )
-
-        self.target_critic.load_state_dict(critic_state_dict)
 
     def save_models(self):
         self.actor.save_checkpoint()

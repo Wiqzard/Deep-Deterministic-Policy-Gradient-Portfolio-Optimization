@@ -1,15 +1,4 @@
 import numpy as np
-
-
-NUM_FEATURES = 3
-NUM_PERIODS = 50
-NUM_ASSETS = 8
-
-State = tuple[
-    np.ndarray((NUM_FEATURES, NUM_PERIODS, NUM_ASSETS)), np.ndarray((NUM_ASSETS))
-]
-
-
 class ReplayBuffer(object):
     """
     n_actions = num_assets
@@ -17,19 +6,23 @@ class ReplayBuffer(object):
                     -> saves into 2d array (not efficient)
 
     """
-
-    def __init__(self, max_size, input_shape, n_actions):
-        self.mem_size = max_size
+    def __init__(self, config):
+        self.config = config
+        self.mem_size = config.max_size
+        self.n_actions = config.num_assets
+        self.num_features = config.num_features
+        self.seq_len = config.seq_len
+        
         self.mem_cntr = 0
         self.state_memory = (
-            np.zeros((self.mem_size, *input_shape)),
-            np.zeros((self.mem_size, n_actions)),
+            np.zeros((self.mem_size, self.num_features, self.seq_len, self.n_actions)),
+            np.zeros((self.mem_size, self.n_actions)),
         )  # * unpacks tuple
         self.new_state_memory = (
-            np.zeros((self.mem_size, *input_shape)),
-            np.zeros((self.mem_size, n_actions)),
+            np.zeros((self.mem_size, self.num_features, self.seq_len, self.n_actions)),
+            np.zeros((self.mem_size, self.n_actions)),
         )
-        self.action_memory = np.zeros((self.mem_size, n_actions))
+        self.action_memory = np.zeros((self.mem_size, self.n_actions))
         self.reward_memory = np.zeros(self.mem_size)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.float32)
 
@@ -57,12 +50,3 @@ class ReplayBuffer(object):
         terminal = self.terminal_memory[batch]
 
         return states, actions, rewards, new_states, terminal
-
-
-# print(a[0].shape)
-# print(a[1].shape)
-# print(b.shape)
-# print(c.shape)
-# print(d[0].shape)
-# print(d[1].shape)
-# print(e.shape)

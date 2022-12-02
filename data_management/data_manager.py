@@ -17,7 +17,7 @@ from typing import List, Tuple
 
 from coin_database import CoinDatabase
 from utils.constants import COINS
-from networks.time_features import time_features
+from agent.time_features import time_features
 
 warnings.filterwarnings('ignore')
 

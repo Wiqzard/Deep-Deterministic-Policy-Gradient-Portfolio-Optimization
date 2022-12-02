@@ -8,17 +8,16 @@ from random import randint
 
 from utils.constants import NUM_ASSETS, NUM_FEATURES
 from data_management.data_manager import PriceHistory
-
+from utils.tools import train_test_split
 
 class PortfolioManager():
     PRICE_TYPE = "ratio"
     def __init__(self, args, commission_rate:float=0.025, min_history: Optional[int] = None, flag="train", frequency: int = 1, **kwargs) -> None:
         self.frequency = frequency
         self.min_history = min_history or 0
-        
-        self.start_date = config.start_date_train if flag=="train" else config.start_date_test
-        self.end_date = config.end_date_train if flag=="train" else config.end_date_test
+        self.args = args
 
+        self._set_dates(flag=flag)
         if not commission_rate:
           self.commission_rate_selling : float = args.commission_rate_purchasing
           self.commission_rate_purchasing : float  = args.commission_rate_selling
@@ -38,6 +37,11 @@ class PortfolioManager():
 
         self.initial_weights = NUM_ASSETS * [1 / NUM_ASSETS]
         self.__set_X()
+
+    def _set_dates(self, flag) -> None:
+        start_date_train, end_date_train, start_date_test, end_date_test = train_test_split(self.args.ratio, self.args.granularity, self.args.start_date, self.args.end_date)
+        self.start_date = start_date_train if flag=="train" else start_date_test
+        self.end_date = end_date_train if flag=="test" else end_date_test
 
     def __set_X(self) -> None:
       self.X = self.state_space.filled_feature_matrices[0]

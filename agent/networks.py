@@ -133,11 +133,7 @@ class ActorNetwork(nn.Module):
         return x
 
 
-<<<<<<< HEAD
-=======
 
-
->>>>>>> main
 class ActorNetworkLinear(nn.Module):
     def __init__(
         self,

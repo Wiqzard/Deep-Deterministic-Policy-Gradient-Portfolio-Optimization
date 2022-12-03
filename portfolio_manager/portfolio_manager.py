@@ -6,24 +6,27 @@ from numpy import ndarray as ndarray
 import matplotlib.pyplot as plt
 from random import randint
 
-from utils.constants import NUM_ASSETS, NUM_FEATURES
+from utils.constants import NUM_ASSETS, NUM_FEATURES, START_VALUE
 from data_management.data_manager import PriceHistory
-from utils.tools import train_test_split
+from utils.tools import train_test_split, count_granularity_intervals, logger
 
 class PortfolioManager():
     PRICE_TYPE = "ratio"
 
-    def __init__(self, args, commission_rate:float=0.025, min_history: Optional[int] = None, flag="train", frequency: int = 1, **kwargs) -> None:
+    def __init__(self, args, commission_rate:float=None,  min_history: Optional[int] = None, flag="train", frequency: int = 1, **kwargs) -> None:
         self.frequency = frequency
         self.min_history = min_history or 0
         self.args = args
 
         self._set_dates(flag=flag)
+        self._check_dates()
+
         if not commission_rate:
           self.commission_rate_selling : float = args.commission_rate_purchasing
           self.commission_rate_purchasing : float  = args.commission_rate_selling
         else:
           self.commission_rate_selling = commission_rate
+
         self.state_space = PriceHistory(
             args,
             num_periods=args.seq_len,
@@ -32,26 +35,32 @@ class PortfolioManager():
             end_date=self.end_date,
             scale=False)
         
-        self.start_value: int = 10000
-        self.fee: float = 0.0025
+        self.start_value: int = START_VALUE 
+        self.fee: float = args.commission_rate_selling 
         self.rf_rate = 0.0
 
         self.initial_weights = NUM_ASSETS * [1 / NUM_ASSETS]
         self.__set_X()
 
 
+    def _check_dates(self) -> None:
+        data_points = count_granularity_intervals(self.start_date, self.end_date, self.args.granularity)
+        assert self.args.seq_len <= data_points, f"Not enough time periods in dataset {data_points}, but need {self.args.seq_len}"
+
+
     def _set_dates(self, flag) -> None:
         start_date_train, end_date_train, start_date_test, end_date_test = train_test_split(self.args.ratio, self.args.granularity, self.args.start_date, self.args.end_date)
         self.start_date = start_date_train if flag=="train" else start_date_test
-        self.end_date = end_date_test if flag=="test" else end_date_train
-
+        self.end_date = end_date_train if flag=="train" else end_date_test
+        print(self.start_date)
+        print(self.end_date)
  
     def __set_X(self) -> None:
       self.X = self.state_space.filled_feature_matrices[0]
       self.X = self.X.rename(columns={"time": "date"}).set_index("date")
       self.X.columns.name = "Symbols"
       self.ratio = self._convert_prices(self.X, "ratio")
-
+      print(f"hahhahaha {self.X.shape}")
 
     def init_weights(self, columns):
         """Set initial weights.

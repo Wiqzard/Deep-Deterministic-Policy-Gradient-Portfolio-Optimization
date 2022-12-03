@@ -16,8 +16,10 @@ from sklearn.preprocessing import StandardScaler
 from typing import List, Tuple
 
 from data_management.coin_database import CoinDatabase
-from utils.constants import COINS
+from utils.constants import *
 from agent.time_features import time_features
+from utils.tools import count_granularity_intervals
+
 
 warnings.filterwarnings('ignore')
 
@@ -45,6 +47,7 @@ class PriceHistory(Dataset):
         scale: bool=False
     ):
         self.coins = COINS
+        self.num_assets = NUM_ASSETS
         self.num_periods = num_periods
         self.granularity = granularity
         self.start_date = start_date
@@ -56,13 +59,21 @@ class PriceHistory(Dataset):
         self.label_len = label_len
         self.pred_len = pred_len
 
+        self._check_dates()
         self.__set_data_matrix()
         self.filled_feature_matrices = self.__fill_nan(self.__efficent_all(cash_bias=False))
+        print(f"in dataman {self.filled_feature_matrices[0].shape}")
+        print(f"in datamansaa {self.data_matrix[0].shape}")
         self.__set_data_stamp()
         if scale:
           self.filled_feature_matrices_scaled = None
           self.__scale_feature_matrix(feature=0)
+
            
+    def _check_dates(self) -> None:
+        data_points = count_granularity_intervals(self.start_date, self.end_date, self.granularity)
+        assert self.num_periods <= data_points, f"Not enough time periods in dataset {data_points}, but need {self.num_periods}" 
+ 
 
     def __scale_feature_matrix(self, feature:int=0) -> None:
       self.scaler = StandardScaler()
@@ -71,9 +82,6 @@ class PriceHistory(Dataset):
       closes_ = self.scaler.transform(feature_matrix.iloc[:, 1:].values)
       self.filled_feature_matrices_scaled[feature].iloc[:, 1:] = closes_
 
-
-
- 
 
     # Implement error handling
     def __set_data_matrix(
@@ -97,8 +105,10 @@ class PriceHistory(Dataset):
             )
             self.data_matrix.append(data)
 
+
     def get_list_of_npm(self) -> List[pd.DataFrame]:
         return [self.normalized_price_matrix(idx=i) for i in range(1, self.data_matrix[0].shape[0] - self.num_periods)]
+
 
     def __efficent_all(self, cash_bias:bool=True) -> List[pd.DataFrame]:  #returns List[normalized_price(close),] for all assets
         closes, highs, lows = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
@@ -110,6 +120,7 @@ class PriceHistory(Dataset):
             highs[f"high_{i}"] = coin_data["high"]
             lows[f"low_{i}"] = coin_data["low"]
         return closes, highs, lows
+
 
     def __get_nan_sequence_from_column(self, nan_indices) -> Tuple[int, int]:
       """
@@ -129,6 +140,7 @@ class PriceHistory(Dataset):
           break
       return first_value, last_value
 
+
     def __fill_sequence_in_column(self, df: pd.DataFrame, column_name:str):
         """
       input: dataframe and column_name to fill
@@ -146,9 +158,9 @@ class PriceHistory(Dataset):
         for i in range(first_value_idx +1 , last_value_idx+1):
             value = first_value + i * delta_step
             value = max(value, 0)
-            print(value)
             filled_frame.at[i, column_name] = value
         return filled_frame
+
 
     def __one_fill(self, data:pd.DataFrame) -> pd.DataFrame:
       for column in data:
@@ -156,6 +168,7 @@ class PriceHistory(Dataset):
         if nan_indices.shape[0] != 0:
           filled_sequence = self.__fill_sequence_in_column(data, column)
       return filled_sequence
+
 
     def __fill_nan(self, data: Tuple[pd.DataFrame]) -> Tuple[pd.DataFrame]:
         """
@@ -166,7 +179,6 @@ class PriceHistory(Dataset):
       calculate price and index difference
       fill values with last price + delta_price/delta_index + Noise
       """
-      
         closes = data[0]
         highs = data[1]
         lows = data[2]
@@ -176,6 +188,7 @@ class PriceHistory(Dataset):
             highs = self.__one_fill(highs)
             lows = self.__one_fill(lows)
         return closes, highs, lows
+
 
     def __normalized_feature_matrix1(self, idx:int, feature_matrix: pd.DataFrame) -> np.array:
         """
@@ -188,6 +201,7 @@ class PriceHistory(Dataset):
         V_t = feature_matrix.iloc[idx-50 +1 : idx+1] / feature_matrix.iloc[idx]
         return V_t.to_numpy()[np.newaxis, ...]
     
+
     def __normalized_feature_matrices(self, idx:int) -> np.array:
         """
       Input: index, feature matrix such as closes (with all columns(time included)),
@@ -198,16 +212,19 @@ class PriceHistory(Dataset):
         v_t = self.filled_feature_matrices[0].iloc[idx - 1, 1:].to_numpy()
         return [(feature_matrix.iloc[idx - self.num_periods : idx, 1:] / v_t).to_numpy()[np.newaxis, ...] for feature_matrix in self.filled_feature_matrices]
 
-    
 
-    def normalized_price_matrix(self, idx:int) -> np.array:#########
+    def normalized_price_matrix(self, idx:int) -> np.array:
       """
       Input: index, t in v_t
       Output: price_matrix
       """
       cash_bias = 0 # self.filled_feature_matrices[0].shape[1]==self.num_assets-1
-      idx += self.num_periods #- 1
-      assert idx >= self.num_periods and idx <= self.data_matrix[0].shape[0]
+      idx += self.num_periods
+      #print(idx)
+
+      assert idx >= self.num_periods 
+      assert idx <= self.data_matrix[0].shape[0], f"total length {self.data_matrix[0].shape[0]} but idx={idx}"
+
       normalized_features_matrices= self.__normalized_feature_matrices(idx=idx)
       num_assets = self.num_assets - cash_bias
       X_t = np.empty((1, self.num_periods, num_assets))
@@ -220,6 +237,7 @@ class PriceHistory(Dataset):
 
     def __len__(self) -> int:
       return len(self.filled_feature_matrices[0]) - self.num_periods - self.pred_len + 1
+
 
     def __set_data_stamp(self):
         # sourcery skip: extract-method, inline-immediately-returned-variable
@@ -260,6 +278,7 @@ class PriceHistory(Dataset):
     def inverse_transform(self, data) -> np.array:
       return self.scaler.inverse_transform(data)
     
+
     def get_return(self, idx:int) -> np.array:
       assert idx < len(self.filled_feature_matrices[0])
       """

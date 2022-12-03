@@ -32,7 +32,8 @@ class Environment:
     def _set_dates(self, flag) -> None:
         start_date_train, end_date_train, start_date_test, end_date_test = train_test_split(self.args.ratio, self.args.granularity, self.args.start_date, self.args.end_date)
         self.start_date = start_date_train if flag=="train" else start_date_test
-        self.end_date = end_date_train if flag=="test" else end_date_test
+        self.end_date = end_date_train if flag=="train" else end_date_test
+
 
     def calculate_reward(self, state_action: dict) -> float:
         """
@@ -50,7 +51,7 @@ class Environment:
         ) 
         y_t = np.concatenate((np.ones((1)), y_t))
         w_t_prime = (np.multiply(y_t, w_t_1)) / np.dot(y_t, w_t_1)
-        mu_t = 1 - self.commission_rate_selling * sum(
+        mu_t = 1 - self.args.commission_rate_selling * sum(
             np.abs(w_t_prime - state_action["action_t"])
         )
         r_t = math.log(mu_t * np.dot(y_t, w_t_1))
@@ -90,6 +91,9 @@ class Environment:
         }
         next_state = (npm, action)
         reward = self.calculate_reward(curr_states_action)
+        print("here") 
+        print(len(self.state_space))
+        print(self.period + self.state_space.num_periods + 1)
         done = (
             self.period + self.state_space.num_periods + 1
             == len(self.state_space)

@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 import logging
 from typing import Tuple
+
+
+
 def get_date_minutes(date: str) -> int:
     date_datetime = datetime.strptime(date, "%Y-%m-%d-%H-%M")
     time_delt = date_datetime - datetime(1970, 1, 1)
@@ -53,3 +56,9 @@ def train_test_split(ratio:float, granularity:int,  start_date: str, end_date: s
 
     return start_date_train, end_date_train, start_date_test, end_date_test
 
+
+def count_granularity_intervals(start_date:str, end_date:str, granularity:int):
+    start_date = datetime.strptime(start_date, "%Y-%m-%d-%H-%M")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d-%H-%M")
+    interval = end_date - start_date
+    return int(interval.total_seconds() // granularity)

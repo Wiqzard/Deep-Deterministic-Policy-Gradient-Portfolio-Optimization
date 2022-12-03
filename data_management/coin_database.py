@@ -180,37 +180,60 @@ class CoinDatabase:
 #            data["time"] = data["time"].astype(int)
 #            return data
 
-    def get_coin_data(
-        self, coin: str, granularity, start_date: str, end_date: str
-    ) -> pd.DataFrame:
+    #def get_coin_data(
+    #    self, coin: str, granularity, start_date: str, end_date: str
+    #) -> pd.DataFrame:
+    #    start_date_minutes = get_date_minutes(start_date)
+
+    #    if end_date is not None:
+    #        end_date_minutes = get_date_minutes(end_date)
+    #        end_sql = f"and time<={str(end_date_minutes)}"
+    #    else:
+    #        end_sql = ""
+
+    #    with sqlite3.connect(self.database_path) as connection:
+    #        cursor = connection.cursor()
+
+    #        table_name = f"{coin}-History"
+    #        features_str = ",".join(map(str, self.features))
+    #        features_str = '"low", "high", "open", "close", "volume" '
+    #        sql = (
+    #            'SELECT DISTINCT "time",'
+    #            + features_str
+    #            + """ FROM "{table_name}"
+    #         WHERE time>={start_date} {end_sql}
+    #        and time%{granularity}=0""".format(
+    #                table_name=table_name,
+    #                start_date=start_date_minutes,
+    #                end_sql=end_sql,
+    #                granularity=int(granularity / 60),
+    #            )
+    #        )
+    #        cursor.execute(sql)
+    #        df = pd.DataFrame(cursor.fetchall(), columns=["time"] + self.features)
+    #        df = df.sort_values("time")
+    #        df["time"] = pd.to_datetime(df["time"], unit="m")
+    #        df = df.reset_index(drop=True)
+    #        return df
+    def get_coin_data(self, coin: str, granularity, start_date: str, end_date: str) -> pd.DataFrame:
         start_date_minutes = get_date_minutes(start_date)
 
-        if end_date is not None:
-            end_date_minutes = get_date_minutes(end_date)
-            end_sql = f"and time<={str(end_date_minutes)}"
-        else:
-            end_sql = ""
+        end_date_minutes = get_date_minutes(end_date) if end_date is not None else None
 
         with sqlite3.connect(self.database_path) as connection:
             cursor = connection.cursor()
 
             table_name = f"{coin}-History"
-            features_str = ",".join(map(str, self.features))
             features_str = '"low", "high", "open", "close", "volume" '
-            sql = (
-                'SELECT DISTINCT "time",'
-                + features_str
-                + """ FROM "{table_name}"
-             WHERE time>={start_date} {end_sql}
-            and time%{granularity}=0""".format(
-                    table_name=table_name,
-                    start_date=start_date_minutes,
-                    end_sql=end_sql,
-                    granularity=int(granularity / 60),
-                )
-            )
+            sql = f'SELECT DISTINCT "time", {features_str} FROM "{table_name}" WHERE time>={start_date_minutes}'
+            if end_date_minutes is not None:
+                sql += f" and time<={str(end_date_minutes)}"
+            sql += f' and time%{int(granularity / 60)}=0'
+
             cursor.execute(sql)
             df = pd.DataFrame(cursor.fetchall(), columns=["time"] + self.features)
+            if df.empty:
+                raise ValueError("No data found for the specified parameters.")
             df = df.sort_values("time")
             df["time"] = pd.to_datetime(df["time"], unit="m")
             df = df.reset_index(drop=True)

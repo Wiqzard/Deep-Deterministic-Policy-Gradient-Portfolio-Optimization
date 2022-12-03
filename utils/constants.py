@@ -19,3 +19,4 @@ COINS = [ "BTC-USD", "ETH-USD", "ADA-USD",
 FEATURES = ["low", "high", "open", "close", "volume"]
 NUM_ASSETS = len(COINS)
 NUM_FEATURES = 3
+START_VALUE = 10000

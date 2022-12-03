@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 import logging
 from typing import Tuple
-
+import multiprocessing
+import threading
+import sys 
 
 
 def get_date_minutes(date: str) -> int:
@@ -62,3 +64,22 @@ def count_granularity_intervals(start_date:str, end_date:str, granularity:int):
     end_date = datetime.strptime(end_date, "%Y-%m-%d-%H-%M")
     interval = end_date - start_date
     return int(interval.total_seconds() // granularity)
+
+
+#def check_user_input(abort:bool) -> None:
+#    while not abort:
+#        input_str = input("Enter 'abort' to terminate loop: ")
+#        if input_str.lower() == "abort":
+#            abort = True
+#def check_user_input(abort:threading.Event) -> None:
+#    while not abort.is_set():
+#        input_str = input("Enter 't' to terminate loop: \n")
+#        if input_str.lower() == "t":
+#            abort.set()        
+#            logger.info("Train Loop will terminate after current episode.")    
+#def check_user_input(abort:multiprocessing.Value) -> None:
+#    while not abort.value:
+#        input_str = input("Enter 'abort' to terminate loop: \n")
+#        if input_str.lower() == "abort":
+#            abort.value = True
+

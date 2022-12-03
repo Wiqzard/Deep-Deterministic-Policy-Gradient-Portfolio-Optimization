@@ -4,11 +4,15 @@ import numpy as np
 import random
 import torch
 import warnings
+import os
 
 from utils.constants import *
 from data_management.coin_database import CoinDatabase
 from utils.tools import logger
 from exp.exp_main import Exp_Main
+from utils.visualize import plot_asset_values, plot_weights_last_backtest, plot_value_last_backtest, plot_results_episodes, plot_weight_changes_episodes
+from environment.environment import Environment
+
 
 #agent
 def main():
@@ -88,9 +92,38 @@ def main():
         
         exp.train(args.with_test, args.resume)
 
-    from utils.visualize import plot_asset_values
-    from environment.environment import Environment
-    env = Environment(args)
-    plot_asset_values(env, scale=True, difference=False)
+
+#    train_scores_episodes, test_scores_episodes, train_action_histories, test_action_histories = Exp.get_results
+    
+    path_results = "outputs/results"
+    if not os.listdir(path_results):
+        logger.warn('The path is empty')
+    else:
+        train_scores_episodes = np.load(os.path.join(path_results, "train_scores_episodes.npy"))
+        test_scores_episodes = np.load(os.path.join(path_results, "test_scores_episodes.npy"))
+        train_action_histories = np.load(os.path.join(path_results, "train_action_histories.npy"))
+        test_action_histories = np.load(os.path.join(path_results, "test_action_histories.npy"))
+#    last_train_action_history = train_action_histories[-1]
+#    last_test_action_history = test_action_histories[-1]
+#    last_train_scores = train_scores_episodes[-1]
+#    last_test_scores = test_scores_episodes[-1]
+#    
+#    #PLOT ASSET VALUES
+#    plot_train = True
+#    if plot_train:
+#        plot_weights_last_backtest(last_train_action_history, k=1) 
+#        plot_value_last_backtest(last_train_scores, k=1 )
+#        plot_results_episodes(train_scores_episodes, k=1)
+#        plot_weight_changes_episodes(train_action_histories, k=1)
+#    else:
+#        plot_weights_last_backtest(last_test_action_history, k=1) 
+#        plot_value_last_backtest(last_test_scores, k=1 )
+#        plot_results_episodes(test_scores_episodes, k=1)
+#        plot_weight_changes_episodes(test_action_histories, k=1)
+#
+#   env = Environment(args)
+#    plot_asset_values(env, scale=True, difference=False) 
+    
+     
 if __name__ == "__main__":
     main()

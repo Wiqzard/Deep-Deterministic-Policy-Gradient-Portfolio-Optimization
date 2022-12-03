@@ -1,6 +1,5 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import math
-
 from tqdm import tqdm
 from utils.tools import logger
 from portfolio_manager.algorithms import *
@@ -20,6 +19,24 @@ class Exp_Main:
         self.test_benchmark = self.get_benchmark(args.benchmark_name, flag="test")
 
         self.initial_value = START_VALUE 
+
+        self.train_scores_episodes = []
+        self.test_scores_episodes = []
+        self.train_action_histories = []
+        self.test_action_histories = []
+
+
+    @property
+    def get_results(self) -> Tuple[List, List]:
+        return self.train_scores_episodes, self.test_scores_episodes, self.train_action_histories, self.test_action_histories
+
+
+    def save_results(self, path="outputs/results"):
+        os.makedirs(path, exist_ok=True)
+        names = ["train_scores_episodes", "test_scores_episodes", "train_action_histories", "test_action_histories"]
+        paths = map(lambda name: os.path.join(path, f"{name}"), names) 
+        for name, path_name in zip(names, paths):
+            np.save(path_name, locals().get(name))
 
 
     def _set_agent(self) -> None:
@@ -55,10 +72,10 @@ class Exp_Main:
 
     def log_episode_result(self, episode:int, train_scores:List, test_scores:Optional[List]):
         """Logs the training result after each episode"""
-        train_value = self.initial_value * math.exp(sum(train_scores))
-        test_value = self.initial_value * math.exp(sum(test_scores)) if test_scores else 0
-         
-        logger.info(f"Episode: {episode} --- Train Value: {train_value:.2f} --- Test Value: {test_value:.2f}")
+        if train_scores and test_scores:
+            train_value = self.initial_value * math.exp(sum(train_scores))
+            test_value = self.initial_value * math.exp(sum(test_scores)) if test_scores else 0
+            logger.info(f"Episode: {episode} --- Train Value: {train_value:.2f} --- Test Value: {test_value:.2f}")
     
 
     def log_benchmark(self, in_dollar: bool=True) -> None:
@@ -73,7 +90,7 @@ class Exp_Main:
     def plot_results(self):
         """Plot the resulting portfolio value after each episode (x=episode) redline = ubah
             plot the portfolio weights of last period? plot portfolio weights ob backtest etc..."""
-        pass
+        raise NotImplementedError() 
 
 
     def train(self, with_test:bool=False, resume:bool=False) -> None:
@@ -81,9 +98,10 @@ class Exp_Main:
             self.agent.load_models()
 
         test_steps = self.test_env.num_steps - (2 * self.args.seq_len + 1) if with_test else 0
-        self.log_benchmark(in_dollar=True) 
+        self.log_benchmark(in_dollar=True)
         #if self.args.noise == "OU":
         #   self.agent.noise.reset()
+
         for episode in range(self.args.episodes):
             done = False
             train_scores = []
@@ -93,7 +111,6 @@ class Exp_Main:
                 while not done:
                     act = self.agent.choose_action(obs)
                     new_state, reward, done = self.train_env.step(act)
-                    #train_score += reward
                     train_scores.append(reward)
                     self.agent.remember(obs, act, reward, new_state, int(done))
                     self.agent.learn()
@@ -101,20 +118,45 @@ class Exp_Main:
                     pbar.update(1)
 
                 test_scores = self.backtest(bar=pbar) if with_test else None
+
             self.log_episode_result(episode=episode, train_scores=train_scores, test_scores=test_scores) 
+
+            self.train_scores_episodes.append(sum(train_scores))
+            self.test_scores_episodes.append(sum(test_scores))
+            self.train_action_histories.append(self.train_env.action_history)
+
             if episode % 5 == 0 and episode != 0:
                 self.agent.save_models()
+            self.save_results()
+            
 
 
-    def backtest(self, bar=None) -> None:
+ 
+        
+    def backtest(self, bar=None, env=None) -> None:
         score_history = []
         done = False
-        obs, _= self.test_env.reset()
+        env = env or self.test_env
+        obs, _= env.reset()
         while not done:
             act = self.agent.choose_action(obs, flag="test")
-            new_state, reward, done = self.test_env.step(act)
+            new_state, reward, done = env.step(act)
             #score += reward
             score_history.append(reward)
             obs = new_state
-            bar.update(1)
+            if bar:
+                bar.update(1)
+
+        self.test_action_histories.append(env.action_history)
         return score_history 
+        
+
+
+
+
+
+
+
+
+
+

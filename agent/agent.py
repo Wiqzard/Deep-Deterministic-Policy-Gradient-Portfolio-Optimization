@@ -59,7 +59,7 @@ class Agent(object):
             if flag == "train":
                 if self.args.noise == "OU":
                     noise = torch.tensor(self.noise()).float().to(self.device)
-                    mu_prime = torch.abs(mu + noise) #maybe add torch abs only to noise
+                    mu_prime = torch.abs(mu + torch.abs(noise)) #maybe add torch abs only to noise
                     mu_prime = mu_prime / sum(mu_prime)#nn.functional.softmax(mu_prime)
 
                 elif self.args.noise == "param":

@@ -18,7 +18,7 @@ from typing import List, Tuple
 from data_management.coin_database import CoinDatabase
 from utils.constants import *
 from agent.time_features import time_features
-from utils.tools import count_granularity_intervals
+from utils.tools import count_granularity_intervals, logger
 
 
 warnings.filterwarnings('ignore')
@@ -62,8 +62,7 @@ class PriceHistory(Dataset):
         self._check_dates()
         self.__set_data_matrix()
         self.filled_feature_matrices = self.__fill_nan(self.__efficent_all(cash_bias=False))
-        print(f"in dataman {self.filled_feature_matrices[0].shape}")
-        print(f"in datamansaa {self.data_matrix[0].shape}")
+
         self.__set_data_stamp()
         if scale:
           self.filled_feature_matrices_scaled = None
@@ -103,6 +102,7 @@ class PriceHistory(Dataset):
                     ticker=coin, granularity=gran, start_data=s_date, end_date=e_date
                 )
             )
+            
             self.data_matrix.append(data)
 
 
@@ -220,7 +220,6 @@ class PriceHistory(Dataset):
       """
       cash_bias = 0 # self.filled_feature_matrices[0].shape[1]==self.num_assets-1
       idx += self.num_periods
-      #print(idx)
 
       assert idx >= self.num_periods 
       assert idx <= self.data_matrix[0].shape[0], f"total length {self.data_matrix[0].shape[0]} but idx={idx}"

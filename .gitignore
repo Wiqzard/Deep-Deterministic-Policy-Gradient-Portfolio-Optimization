@@ -4,6 +4,7 @@ __pycache__/
 data/
 **/.DS_Store
 checkpoints/
+outputs/
 output/
 # C extensions
 *.so

@@ -52,15 +52,13 @@ class PortfolioManager():
         start_date_train, end_date_train, start_date_test, end_date_test = train_test_split(self.args.ratio, self.args.granularity, self.args.start_date, self.args.end_date)
         self.start_date = start_date_train if flag=="train" else start_date_test
         self.end_date = end_date_train if flag=="train" else end_date_test
-        print(self.start_date)
-        print(self.end_date)
+   
  
     def __set_X(self) -> None:
       self.X = self.state_space.filled_feature_matrices[0]
       self.X = self.X.rename(columns={"time": "date"}).set_index("date")
       self.X.columns.name = "Symbols"
       self.ratio = self._convert_prices(self.X, "ratio")
-      print(f"hahhahaha {self.X.shape}")
 
     def init_weights(self, columns):
         """Set initial weights.

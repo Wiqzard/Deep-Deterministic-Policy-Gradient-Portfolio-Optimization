@@ -4,10 +4,11 @@ import torch.optim as optim
 import os
 
 from utils.constants import * 
-
+from utils.tools import logger
 
 class CriticNetwork(nn.Module):
-    def __init__(self, args, name):
+    
+    def __init__(self, args):
         super(CriticNetwork, self).__init__()
         self.args = args
 
@@ -32,17 +33,27 @@ class CriticNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=args.critic_learning_rate)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
+        
 
-        chkpt_dir = args.chkpt_dir
+
+    def create_checkpoint(self, name):
+        chkpt_dir = self.args.chkpt_dir
+        if not os.path.exists(chkpt_dir):
+            os.makedirs(chkpt_dir)
         self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg") 
 
+
     def save_checkpoint(self):
-        print("... saving checkpoint ...")
+        if not self.checkpoint_file:
+            raise ValueError("Checkpoint file is missing.")
+        logger.info("... saving checkpoint ...")
         torch.save(self.state_dict(), self.checkpoint_file)
 
+
     def load_checkpoint(self):
-        print("... loading checkpoint ...")
+        logger.info("... loading checkpoint ...")
         torch.load_state_dict(torch.load.checkpoint_file)
+
 
     def forward(self, state, action):
         action_1 = state[1].unsqueeze(-2).to(self.device)  #torch.Size([10, 1, 8])
@@ -62,8 +73,8 @@ class CriticNetwork(nn.Module):
 
 # CNN
 class ActorNetwork(nn.Module):
-    def __init__(self, args, name):
-
+   
+    def __init__(self, args):
         super(ActorNetwork, self).__init__()
         self.args = args
         self.conv1 = nn.Conv2d(
@@ -81,16 +92,31 @@ class ActorNetwork(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
 
-        chkpt_dir = args.chkpt_dir
+
+    def create_checkpoint(self, name):
+        chkpt_dir = self.args.chkpt_dir
+        if not os.path.exists(chkpt_dir):
+            os.makedirs(chkpt_dir)
         self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg") 
 
+
     def save_checkpoint(self):
+        if not self.checkpoint_file:
+            raise ValueError("Checkpoint file missing.")
         print("... saving checkpoint ...")
         torch.save(self.state_dict(), self.checkpoint_file)
+
 
     def load_checkpoint(self):
         print("... loading checkpoint ...")
         torch.load_state_dict(torch.load.checkpoint_file)
+
+
+    def add_parameter_noise(self, scalar=0.1):
+        self.conv1.weight.data += torch.randn_like(self.conv1.weight.data) * scalar 
+        self.conv3.weight.data += torch.randn_like(self.conv3.weight.data) * scalar 
+        self.linear.weight.data += torch.randn_like(self.linear.weight.data) * scalar 
+
 
     def forward(self, state):
         """

@@ -63,7 +63,6 @@ class BCRP(CRP):
         self.opt_weights_kwargs["freq"] = 94
 
         self.b = opt_weights(X, **self.opt_weights_kwargs)
-        print(self.b)
         return super().weights(X)
 
 

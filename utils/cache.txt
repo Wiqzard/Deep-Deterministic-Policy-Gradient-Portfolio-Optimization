@@ -1,0 +1,139 @@
+    def retrieve_data(
+        self, ticker: str, granularity: int, start_date: str, end_date: str
+    ) -> pd.DataFrame:
+
+        if end_date is None:
+            end_date = datetime.now().strftime("%Y-%m-%d-%H-%M")
+
+        start_date_datetime = datetime.strptime(start_date, "%Y-%m-%d-%H-%M")
+        end_date_datetime = datetime.strptime(end_date, "%Y-%m-%d-%H-%M")
+
+        request_volume = (
+            abs((start_date_datetime - end_date_datetime).total_seconds()) / granularity
+        )
+        if request_volume <= 300:
+            response = requests.get(
+                "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
+                    ticker, start_date, end_date, granularity
+                )
+            )
+        else:
+            max_per_mssg = 300
+            logging.info(f"Retrieve history for {ticker}")
+            pbar = tqdm(total=request_volume)
+            data = pd.DataFrame()
+            for i in range(int(request_volume / max_per_mssg) + 1):
+                provisional_start = start_date_datetime + timedelta(
+                    0, i * (granularity * max_per_mssg)
+                )
+                provisional_end = start_date_datetime + timedelta(
+                    0, (i + 1) * (granularity * max_per_mssg)
+                )
+                response = requests.get(
+                    "https://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}".format(
+                        ticker, provisional_start, provisional_end, granularity
+                    )
+                )
+                if response.status_code in [200, 201, 202, 203, 204]:
+                    pbar.update(max_per_mssg)
+
+                    dataset = pd.DataFrame(json.loads(response.text))
+                    if not dataset.empty:
+                        data = pd.concat([data, dataset], ignore_index=True, sort=False)
+                        time.sleep(randint(0, 1))
+                else:
+                    print("Something went wrong")
+            # pbar.close()
+            data.columns = ["time", "low", "high", "open", "close", "volume"]
+            data["time"] = pd.to_datetime(data["time"], unit="s")
+            data = data[data["time"].between(start_date_datetime, end_date_datetime)]
+            data.set_index("time", drop=True, inplace=True)
+            data.sort_index(ascending=True, inplace=True)
+            data.drop_duplicates(subset=None, keep="first", inplace=True)
+            return data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            def fill_table(self, coin_ticker: str, granularity, start_date, end_date) -> None:
+         
+        with sqlite3.connect(self.database_path) as connection:
+            table_name = f"{coin_ticker}-History"
+            query = f"SELECT MIN(time) AS min_date, MAX(time) AS max_date FROM \"{table_name}\""
+            existing_data = pd.read_sql(query, connection)
+            if not existing_data.empty:
+                min_date = datetime.fromtimestamp(existing_data['min_date'].iloc[0] * 60)
+                max_date = datetime.fromtimestamp(existing_data['max_date'].iloc[0] * 60)
+
+                start_date_datetime = datetime.strptime(start_date, "%Y-%m-%d-%H-%M")
+                end_date_datetime = datetime.strptime(end_date, "%Y-%m-%d-%H-%M")
+
+                if start_date_datetime < min_date:
+                    min_date = min_date.strftime("%Y-%m-%d-%H-%M")
+                    data_before = self.retrieve_data(
+                        ticker=coin_ticker,
+                        granularity=granularity,
+                        start_date=start_date,
+                        end_date=min_date,
+                    )
+                    query = f"INSERT INTO \"{table_name}\" (time, low, high, open, close, volume) VALUES (?, ?, ?, ?, ?, ?)"
+                    for i, row in data_before.iterrows():
+                        try:
+                            connection.execute(query, (row['time'], row['low'], row['high'], row['open'], row['close'], row['volume']))
+                        except Exception as e:
+                            logger.error(f"Error inserting data into table: {e}")
+                            return
+                    connection.commit()
+                    logger.info(f"Data inserted into table {table_name} from {start_date} to {min_date}")
+
+                if end_date_datetime > max_date:
+                    max_date = max_date.strftime("%Y-%m-%d-%H-%M")
+                    data_after = self.retrieve_data(
+                        ticker=coin_ticker,
+                        granularity=granularity,
+                        start_date=max_date,
+                        end_date=end_date,
+                    )
+                    query = f"INSERT INTO \"{table_name}\" (time, low, high, open, close, volume) VALUES (?, ?, ?, ?, ?, ?)"
+                    for i, row in data_before.iterrows():
+                        try:
+                            connection.execute(query, (row['time'], row['low'], row['high'], row['open'], row['close'], row['volume']))
+                        except Exception as e:
+                            logger.error(f"Error inserting data into table: {e}")
+                            return
+                    connection.commit()
+                    logger.info(f"Data inserted into table {table_name} from {max_date} to {end_date}")
+                else:
+                    data = self.retrieve_data(
+                        ticker=coin_ticker,
+                        granularity=granularity,
+                        start_date=start_date,
+                        end_date=end_date,
+                    )
+
+                    query = f"INSERT INTO \"{table_name}\" (time, low, high, open, close, volume) VALUES (?, ?, ?, ?, ?, ?)"
+                    for i, row in data.iterrows():
+                        try:
+                            connection.execute(query, (row['time'], row['low'], row['high'], row['open'], row['close'], row['volume']))
+                        except Exception as e:
+                            logger.error(f"Error inserting data into table: {e}")
+                            return
+                    connection.commit()
+                    logger.info(f"Data inserted into table {table_name} from {start_date} to {end_date}")

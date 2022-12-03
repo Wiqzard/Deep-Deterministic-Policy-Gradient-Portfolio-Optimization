@@ -29,10 +29,16 @@ class Environment:
         self.state_history = []
         self.action_history = []
 
+
     def _set_dates(self, flag) -> None:
         start_date_train, end_date_train, start_date_test, end_date_test = train_test_split(self.args.ratio, self.args.granularity, self.args.start_date, self.args.end_date)
         self.start_date = start_date_train if flag=="train" else start_date_test
         self.end_date = end_date_train if flag=="train" else end_date_test
+
+
+    @property
+    def num_steps(self) -> int:
+        return len(self.state_space)
 
 
     def calculate_reward(self, state_action: dict) -> float:
@@ -68,11 +74,12 @@ class Environment:
         npm = self.state_space.normalized_price_matrix(self.period)
         #npm = self.all_npms[self.period-1] if self.compute_before else self.state_space.normalized_price_matrix(self.period)# cash_bias=True)
         start_state = npm, np.array([1] + [0 for _ in range(self.state_space.num_assets - 1)])
-
+        total_steps = self.num_steps - self.period
         self.reward_history = []
         self.state_history = [start_state]
         self.action_history = [self.start_action]
-        return start_state
+        return (start_state), total_steps
+
 
     def step(self, action):
         """
@@ -91,9 +98,6 @@ class Environment:
         }
         next_state = (npm, action)
         reward = self.calculate_reward(curr_states_action)
-        print("here") 
-        print(len(self.state_space))
-        print(self.period + self.state_space.num_periods + 1)
         done = (
             self.period + self.state_space.num_periods + 1
             == len(self.state_space)
@@ -102,6 +106,7 @@ class Environment:
         self.action_history.append(action)
         self.state_history.append(next_state)
         return next_state, reward, done
+
 
     def calculate_relative_price_episode(self) -> np.array:
         first_closes =  self.state_space[0][0]   

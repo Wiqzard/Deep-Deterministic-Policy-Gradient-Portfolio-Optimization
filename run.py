@@ -3,6 +3,7 @@ import argparse
 import numpy as np
 import random
 import torch
+import warnings
 
 from utils.constants import *
 from data_management.coin_database import CoinDatabase
@@ -11,6 +12,8 @@ from exp.exp_main import Exp_Main
 
 #agent
 def main():
+    warnings.filterwarnings('ignore')
+
     fix_seed = 1401
     random.seed(fix_seed)
     torch.manual_seed(fix_seed)
@@ -19,7 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description="DDPG Portfolio Optimization")
 
     parser.add_argument(
-        "--is_training", action="store_true", default=True, help="status"
+        "--is_training", action="store_true", help="status"
     )
 
     parser.add_argument("--noise", type=str, default="OU", help="type of noise to use for the DDPG agent")
@@ -58,7 +61,7 @@ def main():
     parser.add_argument("--use_gpu", action="store_true", default=True, help="use gpu")
     parser.add_argument("--use_amp",action="store_true",help="use automatic mixed precision training",default=False)
 
-    parser.add_argument("--with_test", default=False, action="store_true",
+    parser.add_argument("--with_test", default=True, action="store_true",
                     help="test in training")
     parser.add_argument("--resume", default=False, action="store_true",
                     help="Resume training from the last checkpoint")
@@ -81,9 +84,10 @@ def main():
     Exp = Exp_Main
     if args.is_training:
         exp = Exp(args)
-        logger.info(">>>>>>> start training : --- >>>>>>>>>>>>>>>>>>>>>>>>>>")
+        logger.info("\n >>>>>>> start training : --- >>>>>>>>>>>>>>>>>>>>>>>>>> \n ")
         
         exp.train(args.with_test, args.resume)
 
+    
 if __name__ == "__main__":
     main()

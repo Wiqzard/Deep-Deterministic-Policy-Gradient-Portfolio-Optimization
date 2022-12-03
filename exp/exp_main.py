@@ -1,7 +1,7 @@
 from typing import Optional, List
 import math
 
-
+from tqdm import tqdm
 from utils.tools import logger
 from portfolio_manager.algorithms import *
 from environment.environment import Environment
@@ -49,7 +49,6 @@ class Exp_Main:
             logger.warn(f"No model named {model_name}")
             return
         model = model_map[model_name](args, flag=flag)
-        print(model.X.shape)
         weights = model.run(model.X)
         return model.calculate_returns(weights)
 
@@ -68,43 +67,48 @@ class Exp_Main:
         total_return_test =  self.test_benchmark.prod()
         portfolio_value_train = self.initial_value * total_return_train if in_dollar else total_return_train 
         portfolio_value_test = self.initial_value * total_return_test if in_dollar else total_return_test
-        logger.info(f"Start Training: \n Benchmark: {self.args.benchmark_name} --- Train Value: {portfolio_value_train:.2f} --- Test Value: {portfolio_value_test:.2f}")
+        logger.info(f"Start Training: \n Benchmark: {self.args.benchmark_name} --- Train Value: {portfolio_value_train:.2f} - Trading Periods: {self.train_env.num_steps} --- Test Value: {portfolio_value_test:.2f} - Trading Periods: {self.test_env.num_steps}")
 
 
     def train(self, with_test:bool=False, resume:bool=False) -> None:
-        # sourcery skip: hoist-statement-from-loop
         if resume:
             self.agent.load_models()
-        score_history = []
+
+        test_steps = self.test_env.num_steps - (2 * self.args.seq_len + 1) if with_test else 0
         self.log_benchmark(in_dollar=True) 
-
+        #if self.args.noise == "OU":
+        #   self.agent.noise.reset()
         for episode in range(self.args.episodes):
-            train_scores = 0
             done = False
-            obs = self.train_env.reset()
-            while not done:
-                act = self.agent.choose_action(obs)
-                new_state, reward, done = self.train_env.step(act)
-                #train_score += reward
-                score_history.append(reward)
-                self.agent.remember(obs, act, reward, new_state, int(done))
-                self.agent.learn()
-                obs = new_state
+            train_scores = []
+            obs, train_steps  = self.train_env.reset()
+            total_steps = train_steps - (2 * self.args.seq_len + 1) + test_steps
+            with tqdm(total=total_steps, leave=False, position=1) as pbar:
+                while not done:
+                    act = self.agent.choose_action(obs)
+                    new_state, reward, done = self.train_env.step(act)
+                    #train_score += reward
+                    train_scores.append(reward)
+                    self.agent.remember(obs, act, reward, new_state, int(done))
+                    self.agent.learn()
+                    obs = new_state
+                    pbar.update(1)
 
-            test_scores = self.backtest() if with_test else None
+                test_scores = self.backtest(bar=pbar) if with_test else None
             self.log_episode_result(episode=episode, train_scores=train_scores, test_scores=test_scores) 
-            if episode % 5 == 0:
+            if episode % 5 == 0 and episode != 0:
                 self.agent.save_models()
 
 
-    def backtest(self) -> None:
+    def backtest(self, bar=None) -> None:
         score_history = []
         done = False
-        obs = self.test_env.reset()
+        obs, _= self.test_env.reset()
         while not done:
-            act = self.agent.choose_action(obs)
+            act = self.agent.choose_action(obs, flag="test")
             new_state, reward, done = self.test_env.step(act)
             #score += reward
             score_history.append(reward)
             obs = new_state
+            bar.update(1)
         return score_history 

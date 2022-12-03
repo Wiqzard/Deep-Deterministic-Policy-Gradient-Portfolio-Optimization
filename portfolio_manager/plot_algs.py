@@ -3,21 +3,21 @@ import matplotlib.pyplot as plt
 
 from portfolio_manager.algorithms import *
 
-def plot_model(model_name=str) -> None:
+def plot_model(args, model_name=str,  flag="train") -> None:
     if model_name == "CRP":
-        model = CRP() 
+        model = CRP(args=args, flag=flag) 
     elif model_name == "UBAH":
-        model = UBAH() 
+        model = UBAH(args=args, flag=flag)
     elif model_name == "BCRP":
-        model = BCRP() 
+        model = BCRP(args=args, flag=flag)
     elif model_name == "BestMarkowitz":
-        model = BestMarkowitz() 
+        model = BestMarkowitz(args=args, flag=flag)
     elif model_name == "UP":
-        model = UP() 
+        model = UP(args=args, flag=flag)
     elif model_name == "Anticor":
-        model = Anticor() 
+        model = Anticor(args=args, flag=flag)
     elif model_name == "OLMAR":
-        model = OLMAR() 
+        model = OLMAR(args=args, flag=flag)
     elif model_name == "RMR":
         model = RMR()
     weights = model.run(model.X)
@@ -30,14 +30,14 @@ def plot_model(model_name=str) -> None:
     model.plot_portfolio_weights()
 
 
-def benchmark(comission=None):
-  ubah = UBAH()
-  crp = CRP()
-  bestmarkowitz = BestMarkowitz()
-  up = UP()
-  anticor = Anticor()
-  olmar = OLMAR()
-  rmr = RMR()
+def plot_portfolio_algos(args, flag="train", comission=None):
+  ubah = UBAH(args=args, flag=flag)
+  crp = CRP(args=args, flag=flag)
+  olmar = OLMAR(args=args, flag=flag)
+  bestmarkowitz = BestMarkowitz(args=args, flag=flag)
+  up = UP(args=args, flag=flag)
+  anticor = Anticor(args=args, flag=flag)
+  rmr = RMR(args=args, flag=flag)
 
   plt.figure(figsize=(20, 5), dpi=80)
   plt.title("Portfolio Values")

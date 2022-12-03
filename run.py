@@ -88,6 +88,9 @@ def main():
         
         exp.train(args.with_test, args.resume)
 
-    
+    from utils.visualize import plot_asset_values
+    from environment.environment import Environment
+    env = Environment(args)
+    plot_asset_values(env, scale=True, difference=False)
 if __name__ == "__main__":
     main()

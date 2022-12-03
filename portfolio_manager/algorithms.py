@@ -205,9 +205,11 @@ class OLMAR(PortfolioManager):
             x * w >= eps for new weights w.
         """
 
-        super().__init__(args, flag=flag, min_history=window)
+        super().__init__(args, flag, min_history=window)
         self.name = "OLMAR"
         # input check
+        window = 5
+        eps = 10
         if window < 2:
             raise ValueError("window parameter must be >=3")
         if eps < 1:
@@ -265,7 +267,7 @@ class RMR(OLMAR):
         :param tau: Precision for finding median. Recommended value is around 0.001. Strongly
                     affects algo speed.
         """
-        super().__init__(args, window, eps, flag=flag)
+        super().__init__(args, window, eps, flag)#=flag)
         self.tau = tau
         self.name = "RMR"
 

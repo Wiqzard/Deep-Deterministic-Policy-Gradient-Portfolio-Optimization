@@ -231,7 +231,8 @@ class PortfolioManager():
       for return_ in list(r):
         portfolio_values.append(temp)
         temp *= return_
-      plt.plot(portfolio_values, label=self.name)    
+      plt.plot(portfolio_values, label=self.name)   
+      plt.annotate(f"{portfolio_values[-1]:.2f}", (len(portfolio_values), portfolio_values[-1]))#, xytext=(-randint(0,20),randint(0,20)))
       #x r.index
 
 

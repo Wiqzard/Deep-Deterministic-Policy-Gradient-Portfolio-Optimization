@@ -70,6 +70,12 @@ class Exp_Main:
         logger.info(f"Benchmark: {self.args.benchmark_name} --- Train Value: {portfolio_value_train:.2f} - Trading Periods: {self.train_env.num_steps} --- Test Value: {portfolio_value_test:.2f} - Trading Periods: {self.test_env.num_steps}")
 
 
+    def plot_results(self):
+        """Plot the resulting portfolio value after each episode (x=episode) redline = ubah
+            plot the portfolio weights of last period? plot portfolio weights ob backtest etc..."""
+        pass
+
+
     def train(self, with_test:bool=False, resume:bool=False) -> None:
         if resume:
             self.agent.load_models()

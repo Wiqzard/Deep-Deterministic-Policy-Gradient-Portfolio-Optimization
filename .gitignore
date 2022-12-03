@@ -6,6 +6,7 @@ data/
 checkpoints/
 outputs/
 output/
+*.db
 # C extensions
 *.so
 .vscode/

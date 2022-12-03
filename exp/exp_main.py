@@ -67,7 +67,7 @@ class Exp_Main:
         total_return_test =  self.test_benchmark.prod()
         portfolio_value_train = self.initial_value * total_return_train if in_dollar else total_return_train 
         portfolio_value_test = self.initial_value * total_return_test if in_dollar else total_return_test
-        logger.info(f"Start Training: \n Benchmark: {self.args.benchmark_name} --- Train Value: {portfolio_value_train:.2f} - Trading Periods: {self.train_env.num_steps} --- Test Value: {portfolio_value_test:.2f} - Trading Periods: {self.test_env.num_steps}")
+        logger.info(f"Benchmark: {self.args.benchmark_name} --- Train Value: {portfolio_value_train:.2f} - Trading Periods: {self.train_env.num_steps} --- Test Value: {portfolio_value_test:.2f} - Trading Periods: {self.test_env.num_steps}")
 
 
     def train(self, with_test:bool=False, resume:bool=False) -> None:

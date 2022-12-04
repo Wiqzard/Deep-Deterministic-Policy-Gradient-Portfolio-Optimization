@@ -22,12 +22,15 @@ class Agent(object):
         self.memory = ReplayBuffer(args)
 
         self.critic = CriticNetwork(args)
-        print(self.critic)
-        self.target_critic = copy.deepcopy(self.critic)
-        logger.info("initialize critics")
         self.actor = ActorNetwork(args)
-        self.target_actor = copy.deepcopy(self.actor)
-        logger.info("initialze actors")
+        if args.colab:
+            self.target_critic = CriticNetwork(args)
+            self.target_actor = ActorNetwork(args)
+            self.update_network_parameters(tau=1)
+
+        else:
+            self.target_critic = copy.deepcopy(self.critic)
+            self.target_actor = copy.deepcopy(self.actor)
         self._create_checkpoint_files()
 
         if args.noise == "OU":

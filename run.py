@@ -34,11 +34,19 @@ def main():
     parser.add_argument("--is_training", action="store_true", help="status")
 
     parser.add_argument(
+        "--colab",
+        action="store_true",
+        default=False,
+        help="has to be set if used in google colab",
+    )
+
+    parser.add_argument(
         "--noise",
         type=str,
         default="OU",
         help="type of noise to use for the DDPG agent",
     )
+
     parser.add_argument(
         "--sigma",
         type=float,
@@ -75,7 +83,7 @@ def main():
     parser.add_argument(
         "--tau",
         type=float,
-        default=1e-3,
+        default=1e-2,
         help="soft update parameter for the DDPG agent",
     )
     parser.add_argument(

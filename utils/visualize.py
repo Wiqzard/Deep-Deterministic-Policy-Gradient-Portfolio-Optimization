@@ -140,23 +140,21 @@ def plot_value_last_backtest(reward_history, k=1) -> None:
     k = 10
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value")
-
-    plt.plot(range(0, len(reward_history), k), reward_history[::k])
+    portfolio_value = [
+        START_VALUE * np.prod(reward_history[:i]) for i in range(len(reward_history))
+    ]
+    plt.plot(range(0, len(reward_history), k), portfolio_value[::k])
 
     plt.grid(b=None, which="major", axis="y", linestyle="--")
-    plt.axhline(y=0.125, color="black")
     plt.legend()
 
 
 def plot_results_episodes(end_scores) -> None:
-    k = 10
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value")
 
     plt.plot(end_scores)
-
     plt.grid(b=None, which="major", axis="y", linestyle="--")
-    plt.axhline(y=0.125, color="black")
     plt.legend()
 
 
@@ -166,7 +164,7 @@ def plot_weight_changes_episodes(action_histories, k=1) -> None:
     for action_history in action_histories:
         average = np.average(action_history, axis=1)
         averages.append(average)
-
+        print(averages)
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Average Portfolio Wheigts Per Episode")
 

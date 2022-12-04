@@ -26,6 +26,14 @@ class Exp_Main:
         self.train_action_histories = []
         self.test_action_histories = []
 
+        self.names = [
+            "train_scores_episodes",
+            "test_scores_episodes",
+            "train_action_histories",
+            "test_action_histories",
+        ]
+        self.paths = [os.path.join("outputs/results", name) for name in self.names]
+
     @property
     def get_results(self) -> Tuple[List, List]:
         return (
@@ -35,23 +43,13 @@ class Exp_Main:
             self.test_action_histories,
         )
 
-    def save_results(self, path="outputs/results"):
-        os.makedirs(path, exist_ok=True)
-        names = [
-            "train_scores_episodes",
-            "test_scores_episodes",
-            "train_action_histories",
-            "test_action_histories",
-        ]
-        paths = map(lambda name: os.path.join(path, f"{name}"), names)
-        for name, path_name in zip(names, paths):
+    def save_results(self):
+        os.makedirs("outputs/results", exist_ok=True)
+        for path_name in self.paths:
             if os.path.exists(path_name):
                 os.remove(path_name)
-            # np.save(path_name, locals().get(name))
-            np.save(path_name, self.train_scores_episodes)
-            np.save(path_name, self.test_scores_episodes)
-            np.save(path_name, self.train_action_histories)
-            np.save(path_name, self.test_action_histories)
+        for name, path_name in zip(self.names, self.paths):
+            np.save(path_name, getattr(self, name))
 
     def _set_agent(self) -> None:
         return Agent(self.args, flag="train")

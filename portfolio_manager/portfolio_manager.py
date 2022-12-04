@@ -8,7 +8,12 @@ from random import randint
 
 from utils.constants import NUM_ASSETS, NUM_FEATURES, START_VALUE
 from data_management.data_manager import PriceHistory
-from utils.tools import train_test_split, count_granularity_intervals, logger
+from utils.tools import (
+    train_test_split,
+    count_granularity_intervals,
+    logger,
+    add_periods_to_datetime,
+)
 
 
 class PortfolioManager:
@@ -42,7 +47,6 @@ class PortfolioManager:
             granularity=args.granularity,
             start_date=self.start_date,
             end_date=self.end_date,
-            scale=False,
         )
 
         self.start_value: int = START_VALUE
@@ -74,6 +78,9 @@ class PortfolioManager:
         )
         self.start_date = start_date_train if flag == "train" else start_date_test
         self.end_date = end_date_train if flag == "train" else end_date_test
+        self.start_date = add_periods_to_datetime(
+            self.start_date, self.args.granularity, self.args.seq_len
+        )
         if flag == "full":
             self.start_date = self.args.start_date
             self.end_date = self.args.end_date

@@ -20,7 +20,7 @@ fhandler = logging.FileHandler(filename="/outputs/log.log", mode="a")
 formatter = logging.Formatter("%(asctime)s - %(message)s")
 fhandler.setFormatter(formatter)
 logger.addHandler(fhandler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class dotdict(dict):

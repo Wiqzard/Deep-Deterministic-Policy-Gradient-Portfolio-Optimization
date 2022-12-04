@@ -43,9 +43,6 @@ class PriceHistory:
         granularity: int = None,
         start_date: str = None,
         end_date: str = None,
-        label_len: int = 25,
-        pred_len: int = 25,
-        timeenc: int = 1,
     ):
         self.coins = COINS
         self.num_assets = NUM_ASSETS
@@ -55,10 +52,6 @@ class PriceHistory:
         self.end_date = end_date
         self.data_matrix = []
         self.data_base = CoinDatabase(args)
-        self.timeenc = timeenc
-
-        self.label_len = label_len
-        self.pred_len = pred_len
 
         self._check_dates()
         self.__set_data_matrix()
@@ -73,6 +66,9 @@ class PriceHistory:
         assert (
             self.num_periods <= data_points
         ), f"Not enough time periods in dataset {data_points}, but need {self.num_periods}"
+
+    def __len__(self) -> int:
+        return len(self.filled_feature_matrices[0])
 
     def __scale_feature_matrix(self, feature: int = 0) -> None:
         self.scaler = StandardScaler()
@@ -259,9 +255,10 @@ class FedPriceData(Dataset):
 
         self.args = args
         self.price_history = price_history
-
+        self.label_len = label_len
+        self.pred_len = pred_len
         self.__set_data_stamp()
-
+        self.timeenc = timeenc
         if scale:
             self.filled_feature_matrices_scaled = None
             self.__scale_feature_matrix(feature=0)

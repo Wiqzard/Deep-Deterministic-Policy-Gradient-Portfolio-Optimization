@@ -106,7 +106,7 @@ class Environment:
         }
         next_state = (npm, action)
         reward = self.calculate_reward(curr_states_action)
-        done = self.period + self.state_space.num_periods + 1 == len(self.state_space)
+        done = self.period + self.state_space.num_periods == len(self.state_space) - 1
         self.reward_history.append(reward)
         self.action_history.append(action)
         self.state_history.append(next_state)

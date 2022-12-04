@@ -167,7 +167,7 @@ def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
             start_date=start_date,
             end_date=end_date,
         )
-        data = state_space.filled_feature_matrices[0][50:, :]
+        data = state_space.filled_feature_matrices[0].iloc[50:, :]
         returns = calculate_returns(data).values
         returns_per_episode = returns.sum(axis=1)
         portfolio_value_ubah = [

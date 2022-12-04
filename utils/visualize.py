@@ -170,15 +170,16 @@ def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
         data = state_space.filled_feature_matrices[0].iloc[50:, :]
         returns = calculate_returns(data).values
         returns_per_episode = returns.sum(axis=1)
-        portfolio_value_ubah = [
+        portfolio_values_ubah = [
             START_VALUE * math.exp(np.sum(returns_per_episode[:i]))
             for i in range(len(returns_per_episode))
         ]
         plt.plot(
-            range(0, len(portfolio_value_ubah), k),
-            portfolio_value_ubah[::k],
+            range(0, len(portfolio_values_ubah), k),
+            portfolio_values_ubah[::k],
             label="UBAH",
         )
+        print(portfolio_values_ubah)
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.legend()
 

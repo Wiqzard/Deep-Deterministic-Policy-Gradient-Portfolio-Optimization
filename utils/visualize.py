@@ -4,6 +4,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from utils.constants import *
 from portfolio_manager.algorithms import *
 from agent.noise import OUActionNoisePlain
+import math
 
 
 def plot_model(args, model_name=str, flag="train") -> None:
@@ -141,7 +142,8 @@ def plot_value_last_backtest(reward_history, k=1) -> None:
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value")
     portfolio_value = [
-        START_VALUE * np.prod(reward_history[:i]) for i in range(len(reward_history))
+        START_VALUE * math.exp(np.sum(reward_history[:i]))
+        for i in range(len(reward_history))
     ]
     plt.plot(range(0, len(reward_history), k), portfolio_value[::k])
 
@@ -153,12 +155,12 @@ def plot_results_episodes(end_scores) -> None:
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value")
 
-    plt.plot(end_scores)
+    plt.plot(START_VALUE * np.exp(end_scores))
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.legend()
 
 
-def plot_weight_changes_episodes(action_histories, k=1) -> None:
+def plot_weight_changes_episodes(action_histories) -> None:
     averages = []
 
     for action_history in action_histories:
@@ -171,8 +173,7 @@ def plot_weight_changes_episodes(action_histories, k=1) -> None:
     for i in range(NUM_ASSETS):
         coin = COINS[i]
         plt.plot(
-            range(0, len(averages), k),
-            averages[::k, i],
+            averages[:, i],
             label=coin,
         )
 

@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.optim as optim
 import os
 
-from utils.constants import * 
+from utils.constants import *
 from utils.tools import logger
 
+
 class CriticNetwork(nn.Module):
-    
     def __init__(self, args):
         super(CriticNetwork, self).__init__()
         self.args = args
@@ -23,7 +23,7 @@ class CriticNetwork(nn.Module):
         self.bn1 = nn.LayerNorm([1, 1, NUM_ASSETS])
 
         self.linear_state1 = nn.Linear(NUM_ASSETS, 16)
-        #self.linear_state2 = nn.Linear(16, 16)
+        # self.linear_state2 = nn.Linear(16, 16)
 
         self.linear_action = nn.Linear(NUM_ASSETS, 16)
         self.bn2 = nn.LayerNorm(16)
@@ -33,15 +33,12 @@ class CriticNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=args.critic_learning_rate)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
-        
-
 
     def create_checkpoint(self, name):
         chkpt_dir = self.args.chkpt_dir
         if not os.path.exists(chkpt_dir):
             os.makedirs(chkpt_dir)
-        self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg") 
-
+        self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg")
 
     def save_checkpoint(self):
         if not self.checkpoint_file:
@@ -49,22 +46,24 @@ class CriticNetwork(nn.Module):
         logger.info("... saving checkpoint ...")
         torch.save(self.state_dict(), self.checkpoint_file)
 
-
     def load_checkpoint(self):
         logger.info("... loading checkpoint ...")
-        torch.load_state_dict(torch.load.checkpoint_file)
-
+        self.load_state_dict(torch.load.checkpoint_file)
 
     def forward(self, state, action):
-        action_1 = state[1].unsqueeze(-2).to(self.device)  #torch.Size([10, 1, 8])
+        action_1 = state[1].unsqueeze(-2).to(self.device)  # torch.Size([10, 1, 8])
         action = action.to(self.device)
-        state_value = state[0].to(self.device) #torch.Size([10, 3, 50, 8])
-        state_value = self.relu(self.conv1(state_value)) #torch.Size([10, 2, 48, 8])
-        state_value = self.relu(self.conv2(state_value)).squeeze(-2)  #torch.Size([10, 20,  8])
-        state_value = torch.cat((state_value, action_1), dim=1).unsqueeze(-1) #torch.Size([10, 21, 8, 1])
-        state_value = self.conv3(state_value).squeeze() #torch.Size([10, 8])
+        state_value = state[0].to(self.device)  # torch.Size([10, 3, 50, 8])
+        state_value = self.relu(self.conv1(state_value))  # torch.Size([10, 2, 48, 8])
+        state_value = self.relu(self.conv2(state_value)).squeeze(
+            -2
+        )  # torch.Size([10, 20,  8])
+        state_value = torch.cat((state_value, action_1), dim=1).unsqueeze(
+            -1
+        )  # torch.Size([10, 21, 8, 1])
+        state_value = self.conv3(state_value).squeeze()  # torch.Size([10, 8])
         state_value = self.linear_state1(state_value)
-        #state_value = self.linear_state2(state_value)
+        # state_value = self.linear_state2(state_value)
         action_value = self.linear_action(action)
         state_action_value = self.relu(torch.add(state_value, action_value))
         state_action_value = self.linear_q(state_action_value)
@@ -73,7 +72,6 @@ class CriticNetwork(nn.Module):
 
 # CNN
 class ActorNetwork(nn.Module):
-   
     def __init__(self, args):
         super(ActorNetwork, self).__init__()
         self.args = args
@@ -81,7 +79,8 @@ class ActorNetwork(nn.Module):
             in_channels=NUM_FEATURES, out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
-            in_channels=2, out_channels=20, kernel_size=(args.seq_len - 2, 1))
+            in_channels=2, out_channels=20, kernel_size=(args.seq_len - 2, 1)
+        )
 
         self.conv3 = nn.Conv2d(in_channels=21, out_channels=1, kernel_size=(1, 1))
         self.linear = nn.Linear(in_features=NUM_ASSETS, out_features=NUM_FEATURES)
@@ -92,13 +91,11 @@ class ActorNetwork(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
 
-
     def create_checkpoint(self, name):
         chkpt_dir = self.args.chkpt_dir
         if not os.path.exists(chkpt_dir):
             os.makedirs(chkpt_dir)
-        self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg") 
-
+        self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_ddpg")
 
     def save_checkpoint(self):
         if not self.checkpoint_file:
@@ -106,17 +103,14 @@ class ActorNetwork(nn.Module):
         print("... saving checkpoint ...")
         torch.save(self.state_dict(), self.checkpoint_file)
 
-
     def load_checkpoint(self):
         print("... loading checkpoint ...")
-        torch.load_state_dict(torch.load.checkpoint_file)
-
+        self.load_state_dict(torch.load.checkpoint_file)
 
     def add_parameter_noise(self, scalar=0.1):
-        self.conv1.weight.data += torch.randn_like(self.conv1.weight.data) * scalar 
-        self.conv3.weight.data += torch.randn_like(self.conv3.weight.data) * scalar 
-        self.linear.weight.data += torch.randn_like(self.linear.weight.data) * scalar 
-
+        self.conv1.weight.data += torch.randn_like(self.conv1.weight.data) * scalar
+        self.conv3.weight.data += torch.randn_like(self.conv3.weight.data) * scalar
+        self.linear.weight.data += torch.randn_like(self.linear.weight.data) * scalar
 
     def forward(self, state):
         """
@@ -131,11 +125,15 @@ class ActorNetwork(nn.Module):
         x = self.relu(self.conv1(state_value))
         x = self.relu(self.conv2(x)).squeeze(-2).permute(0, 2, 1)
         x = torch.cat((x, action_1), dim=-1).permute(0, 2, 1).unsqueeze(-1)
-        action = self.conv3(x).squeeze()     
-        #action = self.relu(self.linear(action))
+        action = self.conv3(x).squeeze()
+        # action = self.relu(self.linear(action))
         cash_bias = torch.cat(
-            (torch.ones(*action.shape[:-1], 1), 
-             torch.zeros(*action.shape[:-1], action.shape[-1]-1)), dim=-1).to(self.device)
+            (
+                torch.ones(*action.shape[:-1], 1),
+                torch.zeros(*action.shape[:-1], action.shape[-1] - 1),
+            ),
+            dim=-1,
+        ).to(self.device)
         action = torch.add(action, cash_bias)
         action = self.softmax(action)
         return action

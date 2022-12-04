@@ -1,21 +1,52 @@
-import numpy as np
-from utils.constants import NUM_ASSETS
-from utils.visualize import plot_ou_action_noise, plot_asset_values
-from time import sleep
-import ipywidgets as widgets
-from ipywidgets.interact import interact
+import torch
 
-from IPython.display import display
 
-# plot_ou_action_noise(mu=np.zeros(1), theta=0.15, sigma=0.15, dt=0.002, x0=None, steps=500)
-# sleep(10)
+from utils.tools import dotdict
+from utils.tools import logger
 
-# interact(
-#    plot_ou_action_noise,
-#    mu=(0, 10, 1),
-#    sigma=(0.0, 1.0, 0.01),
-#    theta=(0.0, 1.0, 0.01),
-#    x0=(0.0, 1.0, 0.01),
-#    dt=(0.0, 1.0, 0.01),
-#    steps=(1, 100, 1),
-# )
+
+args = dotdict()
+args.is_training = True
+args.colab = False
+args.noise = "OU"
+args.sigma = 0.25
+args.theta = 0.25
+args.dt = 0.002
+args.x0 = None
+args.batch_size = 64
+args.gamma = 0.99
+args.tau = 1e-2
+args.max_size = 100000
+
+args.critic_learning_rate = 1e-4
+args.actor_learning_rate = 1e-3
+args.chkpt_dir = "contents/outputs/ddpg"
+
+args.episodes = 500
+args.ratio = 0.9
+args.benchmark_name = "UBAH"
+args.compute_before = False
+args.seq_len = 50
+
+args.database_path = "outputs/coin_history.db"
+args.granularity = 900
+args.start_date = "2022-09-01-00-00"
+args.end_date = "2022-10-20-00-00"
+
+args.commission_rate_selling = 0.00
+args.commission_rate_purchasing = 0.0025
+
+args.fill_database = True
+args.with_test = True
+args.resume = False
+
+args.use_gpu = True
+args.use_amp = False
+args.use_gpu = bool(torch.cuda.is_available() and args.use_gpu)
+logger.info("Args in experiment:")
+logger.info(args)
+
+from utils.visualize import plot_model
+
+model_names = ["CRP", "UBAH", "BCRP", "BestMarkowitz", "UP", "Anticor", "OLMAR", "RMR"]
+plot_model(args, model_name="OLMAR")

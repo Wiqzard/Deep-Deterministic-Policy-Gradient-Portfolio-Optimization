@@ -33,7 +33,7 @@ def plot_model(args, model_name=str, flag="train") -> None:
     model.plot_portfolio_weights()
 
 
-def plot_portfolio_algos(args, flag="train", comission=None):
+def plot_portfolio_algos(args, flag="train", commission=None):
     ubah = UBAH(args=args, flag=flag)
     crp = CRP(args=args, flag=flag)
     olmar = OLMAR(args=args, flag=flag)
@@ -120,55 +120,6 @@ def plot_asset_values(
     plt.xlabel(f"Periods [{int(granularity / 60)} min]")
     plt.legend()
     plt.show()
-
-
-# def plot_asset_values(
-#    price_matrix,
-#    granularity,
-#    scale: bool = True,
-#    difference: bool = False,
-#    save_path=None,
-# ) -> None:
-#    # Create a new figure and set the title, x-axis label, and y-axis label
-#    plt.figure(figsize=(20, 5), dpi=80)
-#    plt.title("Asset Values")
-#    plt.xlabel(f"Periods [{int(granularity / 60)} min]")
-#    plt.ylabel("Asset Value")
-#    closes = price_matrix.iloc[:, 1:].values
-#    if scale:
-#        scaler = MinMaxScaler()  # MinMaxScaler()#StandardScaler()
-#        scaler.fit(closes)
-#        closes = scaler.transform(closes)
-#
-#    lines = []
-#    for i in range(8):
-#        coin = COINS[i]
-#        data = closes[:, i]
-#        if difference:
-#            data = np.diff(data, axis=0)
-#        (line,) = plt.plot(data, label=coin)
-#        lines.append(line)
-#
-#    plt.legend()
-#    plt.grid(b=None, which="major", axis="y", linestyle="--")
-#
-#    def toggle_line(line):
-#        if line.get_visible():
-#            line.set_visible(False)
-#        else:
-#            line.set_visible(True)
-#
-#    ax_x = 0.7
-#    ax_y = 0.05
-#    ax_spacing = 0.05
-#    for i in range(8):
-#        button_ax = plt.axes([ax_x, ax_y, 0.1, 0.075])
-#        button = Button(button_ax, COINS[i])
-#        button.on_clicked(lambda event, line=lines[i]: toggle_line(line))
-#        ax_y += ax_spacing
-#    plt.interactive(False)
-#    plt.ioff()
-#    plt.show()
 
 
 def plot_weights_last_backtest(action_history, k=1):

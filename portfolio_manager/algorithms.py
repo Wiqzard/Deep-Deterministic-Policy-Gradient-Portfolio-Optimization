@@ -1,8 +1,9 @@
-#@title CRP
+# @title CRP
 import numpy as np
 
 from portfolio_manager.portfolio_manager import PortfolioManager
 from portfolio_manager.manager_tools import *
+
 
 class CRP(PortfolioManager):
     """Constant rebalanced portfolio = use fixed weights all the time. Uniform weights
@@ -34,17 +35,18 @@ class CRP(PortfolioManager):
 
 
 class UBAH(PortfolioManager):
-  PRICE_TYPE = "raw"
-  def __init__(self, args,  flag, b=None):
-    super().__init__(args, flag=flag)
-    self.name = "UBAH"
-    self.b = np.array(b) if b is not None else None
+    PRICE_TYPE = "raw"
 
-  def weights(self, X):
-    self.b = np.ones(8) / 8
-    b = X.mul((self.b), axis=1)
-    b = b.div(b.sum(axis=1), axis=0)
-    return b
+    def __init__(self, args, flag, b=None):
+        super().__init__(args, flag=flag)
+        self.name = "UBAH"
+        self.b = np.array(b) if b is not None else None
+
+    def weights(self, X):
+        self.b = np.ones(8) / 8
+        b = X.mul((self.b), axis=1)
+        b = b.div(b.sum(axis=1), axis=0)
+        return b
 
 
 class BCRP(CRP):
@@ -56,7 +58,7 @@ class BCRP(CRP):
         super().__init__(args, flag=flag)
         self.opt_weights_kwargs = kwargs
         self.name = "BCRP"
-        
+
     def weights(self, X):
         """Find weights which maximize return on X in hindsight!"""
         # update frequency
@@ -67,8 +69,7 @@ class BCRP(CRP):
 
 
 class BestMarkowitz(CRP):
-    """Optimal Markowitz portfolio constructed in hindsight.
-    """
+    """Optimal Markowitz portfolio constructed in hindsight."""
 
     def __init__(self, args, flag, global_sharpe=None, sharpe=None, **kwargs):
         super().__init__(args, flag=flag)
@@ -76,11 +77,11 @@ class BestMarkowitz(CRP):
         self._sharpe = sharpe
         self.opt_markowitz_kwargs = kwargs
         self.name = "BM"
-        
+
     def weights(self, X):
         """Find optimal markowitz weights."""
         # update frequency
-        freq = 1#tools.freq(X.index)
+        freq = 1  # tools.freq(X.index)
 
         R = X - 1
         # calculate mean and covariance matrix and annualize them
@@ -101,8 +102,8 @@ class BestMarkowitz(CRP):
 
 class UP(PortfolioManager):
     """Universal Portfolio by Thomas Cover enhanced for "leverage" (instead of just
-        taking weights from a simplex, leverage allows us to stretch simplex to
-        contain negative positions).
+    taking weights from a simplex, leverage allows us to stretch simplex to
+    contain negative positions).
     """
 
     def __init__(self, args, flag, eval_points=1e4, leverage=1.0):
@@ -141,6 +142,7 @@ class UP(PortfolioManager):
 
         return b / sum(b)
 
+
 class Anticor(PortfolioManager):
     """Anticor (anti-correlation) is a heuristic portfolio selection algorithm.
     It adopts the consistency of positive lagged cross-correlation and negative
@@ -155,7 +157,7 @@ class Anticor(PortfolioManager):
         super().__init__(args, flag=flag)
         self.window = window
         self.name = "Anticor"
-        
+
     def weights(self, X):
         window = self.window
         port = X
@@ -194,10 +196,10 @@ class Anticor(PortfolioManager):
 
 
 class OLMAR(PortfolioManager):
-    """On-Line Portfolio Selection with Moving Average Reversion
-    """
+    """On-Line Portfolio Selection with Moving Average Reversion"""
 
     PRICE_TYPE = "raw"
+
     def __init__(self, args, flag, window=5, eps=10):
         """
         :param window: Lookback window.
@@ -208,8 +210,8 @@ class OLMAR(PortfolioManager):
         super().__init__(args, flag, min_history=window)
         self.name = "OLMAR"
         # input check
-        window = 5
-        eps = 10
+        window = 10
+        eps = 5
         if window < 2:
             raise ValueError("window parameter must be >=3")
         if eps < 1:
@@ -247,11 +249,11 @@ class OLMAR(PortfolioManager):
         return simplex_proj(b)
 
 
-
-
 def norm(x):
     axis = 0 if isinstance(x, pd.Series) else 1
-    return np.sqrt((x ** 2).sum(axis=axis))
+    return np.sqrt((x**2).sum(axis=axis))
+
+
 class RMR(OLMAR):
     """Robust Median Reversion. Strategy exploiting mean-reversion by robust
     L1-median estimator. Practically the same as OLMAR.
@@ -267,7 +269,7 @@ class RMR(OLMAR):
         :param tau: Precision for finding median. Recommended value is around 0.001. Strongly
                     affects algo speed.
         """
-        super().__init__(args, window, eps, flag)#=flag)
+        super().__init__(args, window, eps, flag)  # =flag)
         self.tau = tau
         self.name = "RMR"
 
@@ -280,31 +282,3 @@ class RMR(OLMAR):
             d = norm(history - y)
             y = history.div(d, axis=0).sum() / (1.0 / d).sum()
         return y / x
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

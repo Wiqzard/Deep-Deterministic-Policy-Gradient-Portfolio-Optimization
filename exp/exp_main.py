@@ -45,7 +45,13 @@ class Exp_Main:
         ]
         paths = map(lambda name: os.path.join(path, f"{name}"), names)
         for name, path_name in zip(names, paths):
-            np.save(path_name, locals().get(name))
+            if os.path.exists(path_name):
+                os.remove(path_name)
+            # np.save(path_name, locals().get(name))
+            np.save(path_name, self.train_scores_episodes)
+            np.save(path_name, self.test_scores_episodes)
+            np.save(path_name, self.train_action_histories)
+            np.save(path_name, self.test_action_histories)
 
     def _set_agent(self) -> None:
         return Agent(self.args, flag="train")

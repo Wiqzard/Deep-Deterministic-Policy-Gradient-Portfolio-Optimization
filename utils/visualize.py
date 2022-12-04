@@ -148,12 +148,12 @@ def plot_value_last_backtest(reward_history, k=1) -> None:
     plt.legend()
 
 
-def plot_results_episodes(end_scores, k=1) -> None:
+def plot_results_episodes(end_scores) -> None:
     k = 10
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value")
 
-    plt.plot(range(0, len(end_scores), k), end_scores[::k])
+    plt.plot(end_scores)
 
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.axhline(y=0.125, color="black")

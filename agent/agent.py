@@ -15,7 +15,6 @@ from utils.tools import logger
 
 class Agent(object):
     def __init__(self, args, flag="train"):
-
         self.args = args
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.flag = flag

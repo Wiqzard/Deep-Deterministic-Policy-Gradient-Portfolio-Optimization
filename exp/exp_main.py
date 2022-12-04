@@ -33,6 +33,7 @@ class Exp_Main:
             "test_action_histories",
         ]
         self.paths = [os.path.join("outputs/results", name) for name in self.names]
+        os.makedirs("outputs/results", exist_ok=True)
 
     @property
     def get_results(self) -> Tuple[List, List]:
@@ -44,12 +45,11 @@ class Exp_Main:
         )
 
     def save_results(self):
-        os.makedirs("outputs/results", exist_ok=True)
         for path_name in self.paths:
             if os.path.exists(path_name):
                 os.remove(path_name)
         for name, path_name in zip(self.names, self.paths):
-            np.save(path_name, getattr(self, name))
+            np.save(path_name, np.array(getattr(self, name)))
 
     def _set_agent(self) -> None:
         return Agent(self.args, flag="train")
@@ -147,8 +147,8 @@ class Exp_Main:
                 episode=episode, train_scores=train_scores, test_scores=test_scores
             )
 
-            self.train_scores_episodes.append(sum(train_scores))
-            self.test_scores_episodes.append(sum(test_scores))
+            self.train_scores_episodes.append(train_scores)
+            self.test_scores_episodes.append(test_scores)
             self.train_action_histories.append(self.train_env.action_history)
 
             if episode % 5 == 0 and episode != 0:

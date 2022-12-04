@@ -199,6 +199,8 @@ def main():
 
     args.use_gpu = bool(torch.cuda.is_available() and args.use_gpu)
 
+    # <-----------------------= START RUN =-----------------------> #
+
     logger.info("Args in experiment:")
     logger.info(args)
 
@@ -214,45 +216,51 @@ def main():
     Exp = Exp_Main
     if args.is_training:
         exp = Exp(args)
+        setting = f"setting: alr_{args.actor_learning_rate}, clr_{args.critic_learning_rate}, mem_, ..."
         logger.info("\n >>>>>>> start training : --- >>>>>>>>>>>>>>>>>>>>>>>>>> \n ")
 
         exp.train(args.with_test, args.resume)
 
-    #    train_scores_episodes, test_scores_episodes, train_action_histories, test_action_histories = Exp.get_results
-
-    path_results = "outputs/results"
-    if not os.listdir(path_results):
-        logger.warn("The path is empty")
-    else:
-        train_scores_episodes = np.load(
-            os.path.join(path_results, "train_scores_episodes.npy"), allow_pickle=True
-        )
-        test_scores_episodes = np.load(
-            os.path.join(path_results, "test_scores_episodes.npy"), allow_pickle=True
-        )
-        train_action_histories = np.load(
-            os.path.join(path_results, "train_action_histories.npy"), allow_pickle=True
-        )
-        test_action_histories = np.load(
-            os.path.join(path_results, "test_action_histories.npy"), allow_pickle=True
-        )
-        plot_train = True
-        print(train_scores_episodes, test_scores_episodes)
-        last_train_action_history = train_action_histories[-1]
-        last_test_action_history = test_action_histories[-1]
-        last_train_scores = train_scores_episodes[-1]
-        last_test_scores = test_scores_episodes[-1]
-
-        if plot_train:
-            plot_weights_last_backtest(last_train_action_history, k=1)
-            plot_value_last_backtest(last_train_scores, k=1)
-            plot_results_episodes(train_scores_episodes, k=1)
-            plot_weight_changes_episodes(train_action_histories, k=1)
+    #  train_scores_episodes, test_scores_episodes, train_action_histories, test_action_histories = Exp.get_results
+    plot_results = False
+    if plot_results:
+        path_results = "outputs/results"
+        if not os.listdir(path_results):
+            logger.warn("The path is empty")
         else:
-            plot_weights_last_backtest(last_test_action_history, k=1)
-            plot_value_last_backtest(last_test_scores, k=1)
-            plot_results_episodes(test_scores_episodes, k=1)
-            plot_weight_changes_episodes(test_action_histories, k=1)
+            train_scores_episodes = np.load(
+                os.path.join(path_results, "train_scores_episodes.npy"),
+                allow_pickle=True,
+            )
+            test_scores_episodes = np.load(
+                os.path.join(path_results, "test_scores_episodes.npy"),
+                allow_pickle=True,
+            )
+            train_action_histories = np.load(
+                os.path.join(path_results, "train_action_histories.npy"),
+                allow_pickle=True,
+            )
+            test_action_histories = np.load(
+                os.path.join(path_results, "test_action_histories.npy"),
+                allow_pickle=True,
+            )
+            plot_train = True
+            print(train_scores_episodes, test_scores_episodes)
+            last_train_action_history = train_action_histories[-1]
+            last_test_action_history = test_action_histories[-1]
+            last_train_scores = train_scores_episodes[-1]
+            last_test_scores = test_scores_episodes[-1]
+
+            if plot_train:
+                plot_weights_last_backtest(last_train_action_history, k=1)
+                plot_value_last_backtest(last_train_scores, k=1)
+                plot_results_episodes(train_scores_episodes, k=1)
+                plot_weight_changes_episodes(train_action_histories, k=1)
+            else:
+                plot_weights_last_backtest(last_test_action_history, k=1)
+                plot_value_last_backtest(last_test_scores, k=1)
+                plot_results_episodes(test_scores_episodes, k=1)
+                plot_weight_changes_episodes(test_action_histories, k=1)
     #
 
 

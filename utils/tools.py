@@ -6,18 +6,21 @@ import threading
 import sys
 
 
-def get_date_minutes(date: str) -> int:
-    date_datetime = datetime.strptime(date, "%Y-%m-%d-%H-%M")
-    time_delt = date_datetime - datetime(1970, 1, 1)
-    return int(time_delt.total_seconds() / 60)
+import os
 
-
-logger = logging.getLogger("__name__")
-level = logging.INFO
-logger.setLevel(level)
-ch = logging.StreamHandler()
-ch.setLevel(level)
-logger.addHandler(ch)
+# logger = logging.getLogger("__name__")
+# level = logging.INFO
+# logger.setLevel(level)
+# ch = logging.StreamHandler()
+# ch.setLevel(level)
+# logger.addHandler(ch)
+logger = logging.getLogger()
+os.makedirs("/outputs", exist_ok=True)
+fhandler = logging.FileHandler(filename="/outputs/log.log", mode="a")
+formatter = logging.Formatter("%(asctime)s - %(message)s")
+fhandler.setFormatter(formatter)
+logger.addHandler(fhandler)
+logger.setLevel(logging.DEBUG)
 
 
 class dotdict(dict):
@@ -26,6 +29,12 @@ class dotdict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+
+
+def get_date_minutes(date: str) -> int:
+    date_datetime = datetime.strptime(date, "%Y-%m-%d-%H-%M")
+    time_delt = date_datetime - datetime(1970, 1, 1)
+    return int(time_delt.total_seconds() / 60)
 
 
 def train_test_split(

@@ -126,7 +126,7 @@ def plot_asset_values(
 def plot_weights_last_backtest(action_history, k=1):
     k = 10
     plt.figure(figsize=(20, 5), dpi=80)
-    plt.title("Portfolio Wheigts")
+    plt.title("Portfolio Wheigts During Last Episode")
 
     for i in range(NUM_ASSETS):
         coin = COINS[i]
@@ -164,7 +164,7 @@ def plot_weight_changes_episodes(action_histories) -> None:
     averages = []
 
     for action_history in action_histories:
-        average = np.average(action_history, axis=1)
+        average = np.average(action_history, axis=0)
         averages.append(average)
     averages = np.array(averages)
     plt.figure(figsize=(20, 5), dpi=80)

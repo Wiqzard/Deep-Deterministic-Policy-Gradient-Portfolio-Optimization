@@ -118,4 +118,5 @@ def calculate_returns(filled_feature_matrix):
             filled_feature_matrix[col].divide(filled_feature_matrix[col].shift(1)) - 1
         )
         returns.loc[0] = 0
+        returns.fillna(0)
     return returns

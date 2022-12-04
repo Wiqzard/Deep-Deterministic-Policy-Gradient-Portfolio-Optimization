@@ -88,56 +88,35 @@ save_path = None
 
 
 def plot_asset_values(
-    env, scale: bool = True, difference: bool = False, save_path=None
+    price_matrix,
+    granularity,
+    scale: bool = True,
+    difference: bool = False,
+    save_path=None,
 ) -> None:
     plt.figure(figsize=(20, 5), dpi=80)
-    plt.title("Relative Asset Values")
-    plt.xlabel(f"Periods [{int(env.state_space.granularity / 60)} min]")
+    plt.title("Asset Values")
+    plt.xlabel(f"Periods [{int(granularity / 60)} min]")
     plt.ylabel("Asset Value")
 
-    # Use a seaborn color palette for the plot lines
     sns.set_palette("tab10")
-
-    # Use seaborn to improve the appearance of the plot
     sns.set()
     sns.set_style("ticks")
-
-    # Set up the axes with a logarithmic scale on the y-axis
     ax = plt.gca()
     ax.set_yscale("log")
-
-    closes = env.state_space.filled_feature_matrices[0].iloc[:, 1:]
+    closes = price_matrix[1:, :]
     if scale:
         scaler = MinMaxScaler()  # MinMaxScaler()#StandardScaler()
         scaler.fit(closes)
         closes = scaler.transform(closes)
     for i in range(8):
-        coin = env.state_space.coins[i].split("-")[0]
+        coin = COINS[i]
         data = closes[:, i]
         if difference:
             data = np.diff(data, axis=0)
-        # plt.plot(states[0][0][0,:,i]/states[0][0][0,0,i], label=coin) #Close price
         plt.plot(data, label=coin)
-
-    # Add a legend
     plt.legend()
-
-    # Add gridlines to the plot
     plt.grid(b=None, which="major", axis="y", linestyle="--")
-
-    if not save_path == None:
-        plt.savefig(save_path)
-
-    # Show the plot
-    plt.show()
-
-
-def plot_backtest(exp, env):
-    # history for last episodes
-
-    reward_history = env.reward_history
-    state_history = env.state_history
-    action_history = env.action_history
 
 
 def plot_weights_last_backtest(action_history, k=1):

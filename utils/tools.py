@@ -106,3 +106,16 @@ def count_granularity_intervals(start_date: str, end_date: str, granularity: int
 #        input_str = input("Enter 'abort' to terminate loop: \n")
 #        if input_str.lower() == "abort":
 #            abort.value = True
+
+import pandas as pd
+
+
+def calculate_returns(filled_feature_matrix):
+    returns = pd.DataFrame()
+    for i in range(8):
+        col = f"close_{str(i)}"
+        returns[col + "_return"] = (
+            filled_feature_matrix[col].divide(filled_feature_matrix[col].shift(1)) - 1
+        )
+        returns.loc[0] = 0
+    return returns

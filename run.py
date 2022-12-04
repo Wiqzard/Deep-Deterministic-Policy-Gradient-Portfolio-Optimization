@@ -39,7 +39,12 @@ def main():
         default=False,
         help="has to be set if used in google colab",
     )
-
+    parser.add_argument(
+        "--use_numeraire",
+        type=bool,
+        default=True,
+        help="Use the first coin as riskless asset.",
+    )
     parser.add_argument(
         "--noise",
         type=str,

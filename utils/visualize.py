@@ -5,6 +5,8 @@ from utils.constants import *
 from portfolio_manager.algorithms import *
 from agent.noise import OUActionNoisePlain
 import math
+from utils.tools import train_test_split
+from data_management.data_manager import PriceHistory
 
 
 def plot_model(args, model_name=str, flag="train") -> None:
@@ -137,7 +139,10 @@ def plot_weights_last_backtest(action_history, k=1):
     plt.legend()
 
 
-def plot_value_last_backtest(reward_history, k=1) -> None:
+from utils.tools import calculate_returns
+
+
+def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
     k = 10
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value During Last Episode")
@@ -145,8 +150,37 @@ def plot_value_last_backtest(reward_history, k=1) -> None:
         START_VALUE * math.exp(np.sum(reward_history[:i]))
         for i in range(len(reward_history))
     ]
-    plt.plot(range(0, len(reward_history), k), portfolio_value[::k])
+    plt.plot(
+        range(0, len(reward_history), k), portfolio_value[::k], label="Last Episode"
+    )
 
+    if args:
+        assert flag, "specify flag"
+        s_tr, e_tr, s_te, e_te = train_test_split(
+            args.ratio, args.granularity, args.start_date, args.end_date
+        )
+        start_date, end_date = (s_tr, e_tr) if flag == "train" else (s_te, e_te)
+        state_space = PriceHistory(
+            args,
+            num_periods=args.seq_len,
+            granularity=args.granularity,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        data = state_space.filled_feature_matrices[0][50:, :]
+        returns = calculate_returns(data).values
+        returns_per_episode = returns.sum(axis=1)
+        portfolio_value_ubah = [
+            START_VALUE
+            * math.exp(
+                np.sum(returns_per_episode[:i] for i in range(len(returns_per_episode)))
+            )
+        ]
+        plt.plot(
+            range(0, len(portfolio_value_ubah), k),
+            portfolio_value_ubah[::k],
+            label="UBAH",
+        )
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.legend()
 

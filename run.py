@@ -228,7 +228,15 @@ def main():
         logger.info("\n >>>>>>> start training : --- >>>>>>>>>>>>>>>>>>>>>>>>>> \n ")
 
         exp.train(args.with_test, args.resume)
+    from data_management.data_manager import PriceHistory
 
+    price_history = PriceHistory(
+        args, args.seq_len, args.granularity, args.start_date, args.end_date
+    )
+    prices = price_history.filled_feature_matrices[0]
+    plot_asset_values(
+        prices, args.granularity, scale=True, difference=False, save_path=None
+    )
     #  train_scores_episodes, test_scores_episodes, train_action_histories, test_action_histories = Exp.get_results
     plot_results = False
     if plot_results:

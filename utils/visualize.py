@@ -104,7 +104,7 @@ def plot_asset_values(
     sns.set_style("ticks")
     ax = plt.gca()
     ax.set_yscale("log")
-    closes = price_matrix[1:, :]
+    closes = price_matrix.iloc[:, 1:].values
     if scale:
         scaler = MinMaxScaler()  # MinMaxScaler()#StandardScaler()
         scaler.fit(closes)

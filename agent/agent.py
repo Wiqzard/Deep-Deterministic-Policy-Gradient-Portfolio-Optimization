@@ -23,10 +23,10 @@ class Agent(object):
 
         self.critic = CriticNetwork(args)
         print(self.critic)
-        # self.target_critic = copy.deepcopy(self.critic)
+        self.target_critic = copy.deepcopy(self.critic)
         logger.info("initialize critics")
         self.actor = ActorNetwork(args)
-        # self.target_actor = copy.deepcopy(self.actor)
+        self.target_actor = copy.deepcopy(self.actor)
         logger.info("initialze actors")
         self._create_checkpoint_files()
 

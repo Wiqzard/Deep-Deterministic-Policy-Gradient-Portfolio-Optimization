@@ -135,7 +135,7 @@ def main():
     parser.add_argument(
         "--database_path",
         type=str,
-        default="coin_history.db",
+        default="outputs/coin_history.db",
         help="path to the database containing the historical data",
     )
     parser.add_argument(

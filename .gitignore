@@ -9,6 +9,7 @@ output/ddpg/
 output/
 *.db
 coin_history.db
+.ipynb_checkpoints/
 # C extensions
 *.so
 .vscode/

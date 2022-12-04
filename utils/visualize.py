@@ -3,6 +3,7 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from utils.constants import *
 from portfolio_manager.algorithms import *
+from agent.noise import OUActionNoisePlain
 
 def plot_model(args, model_name=str,  flag="train") -> None:
     if model_name == "CRP":
@@ -196,3 +197,34 @@ def plot_weight_changes_episodes(action_histories, k=1) -> None:
         plt.axhline(y=0.125, color="black")
         plt.legend()
 
+#def plot_ou_action_noise(mu, sigma, theta, x0, dt, steps):
+#    ou = OUActionNoisePlain(mu=mu, theta=theta, sigma=sigma, dt=dt, x0=x0)
+#    outputs = [ou() for _ in range(steps)]
+#    plt.figure(figsize=(20, 5), dpi=80)
+#    plt.title("mu: {mu}, sigma: {sigma}, theta: {theta}, x0: {x0}, dt: {dt}")
+#    plt.plot(outputs)
+#    plt.grid(b=None, which="major", axis="y", linestyle="--")
+#    plt.axhline(y=0.125, color="black")
+    
+    
+
+from ipywidgets import interact
+
+def plot_ou_action_noise(mu, sigma, theta, x0, dt, steps):
+    mu_ = np.zeros_like(mu)
+    ou = OUActionNoisePlain(mu=mu_, theta=theta, sigma=sigma, dt=dt, x0=x0)
+    outputs = [ou() for _ in range(steps)]
+    plt.figure(figsize=(20, 5), dpi=80)
+    plt.title("mu: {mu}, sigma: {sigma}, theta: {theta}, x0: {x0}, dt: {dt}")
+    plt.plot(outputs)
+    plt.grid(b=None, which="major", axis="y", linestyle="--")
+    plt.axhline(y=0.125, color="black")
+
+# Use the interact() function to automatically update the plot
+# Note that the mu parameter has been removed from the function call
+#interact(plot_ou_action_noise,
+#         sigma=(0.0, 1.0, 0.01),
+#         theta=(0.0, 1.0, 0.01),
+#         x0=(0.0, 1.0, 0.01),
+#         dt=(0.0, 1.0, 0.01),
+#         steps=(1, 100, 1))

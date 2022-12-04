@@ -129,12 +129,7 @@ def plot_weights_last_backtest(action_history, k=1):
 
     for i in range(NUM_ASSETS):
         coin = COINS[i]
-        plt.plot(
-            action_history[::k, i],
-            x=range(0, len(action_history), k),
-            y=action_history[::k, i],
-            label=coin,
-        )
+        plt.plot(range(0, len(action_history), k), action_history[::k, i], label=coin)
 
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.axhline(y=0.125, color="black")
@@ -146,9 +141,7 @@ def plot_value_last_backtest(reward_history, k=1) -> None:
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value")
 
-    plt.plot(
-        reward_history[::k], x=range(0, len(reward_history), k), y=reward_history[::k]
-    )
+    plt.plot(range(0, len(reward_history), k), reward_history[::k])
 
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.axhline(y=0.125, color="black")
@@ -160,7 +153,7 @@ def plot_results_episodes(end_scores, k=1) -> None:
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value")
 
-    plt.plot(end_scores[::k], x=range(0, len(end_scores), k), y=end_scores[::k])
+    plt.plot(range(0, len(end_scores), k), end_scores[::k])
 
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.axhline(y=0.125, color="black")
@@ -180,9 +173,8 @@ def plot_weight_changes_episodes(action_histories, k=1) -> None:
     for i in range(NUM_ASSETS):
         coin = COINS[i]
         plt.plot(
+            range(0, len(averages), k),
             averages[::k, i],
-            x=range(0, len(averages), k),
-            y=averages[::k, i],
             label=coin,
         )
 

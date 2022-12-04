@@ -43,6 +43,9 @@ class Environment:
         )
         self.start_date = start_date_train if flag == "train" else start_date_test
         self.end_date = end_date_train if flag == "train" else end_date_test
+        if flag == "full":
+            self.start_date = self.args.start_date
+            self.end_date = self.args.end_date
 
     @property
     def num_steps(self) -> int:

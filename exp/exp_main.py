@@ -115,9 +115,7 @@ class Exp_Main:
         if resume:
             self.agent.load_models()
 
-        test_steps = (
-            self.test_env.num_steps - (2 * self.args.seq_len + 1) if with_test else 0
-        )
+        test_steps = self.test_env.num_steps - self.args.seq_len if with_test else 0
         self.log_benchmark(in_dollar=True)
         # if self.args.noise == "OU":
         #   self.agent.noise.reset()
@@ -126,7 +124,7 @@ class Exp_Main:
             done = False
             train_scores = []
             obs, train_steps = self.train_env.reset()
-            total_steps = train_steps - (2 * self.args.seq_len + 1) + test_steps
+            total_steps = train_steps + test_steps - self.args.seq_len
             with tqdm(
                 total=total_steps,
                 leave=self.args.colab,

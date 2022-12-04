@@ -102,32 +102,12 @@ def plot_asset_values(
     plt.title("Asset Values")
     plt.xlabel(f"Periods [{int(granularity / 60)} min]")
     plt.ylabel("Asset Value")
-
-    # Set the color cycle and style for the plot
-    plt.style.use("seaborn-dark")
-    ax = plt.gca()
-    ax.set_color_cycle(
-        [
-            "#1f77b4",
-            "#ff7f0e",
-            "#2ca02c",
-            "#d62728",
-            "#9467bd",
-            "#8c564b",
-            "#e377c2",
-            "#7f7f7f",
-        ]
-    )
-    # ax.set_yscale("log")
-
-    # Get the closing prices for each asset and scale them if requested
     closes = price_matrix.iloc[:, 1:].values
     if scale:
         scaler = MinMaxScaler()  # MinMaxScaler()#StandardScaler()
         scaler.fit(closes)
         closes = scaler.transform(closes)
 
-    # Create a list of lines to be plotted, one for each asset
     lines = []
     for i in range(8):
         coin = COINS[i]
@@ -137,18 +117,15 @@ def plot_asset_values(
         (line,) = plt.plot(data, label=coin)
         lines.append(line)
 
-    # Add the legend and grid to the plot
     plt.legend()
     plt.grid(b=None, which="major", axis="y", linestyle="--")
 
-    # Define a function to toggle the visibility of a line on the plot
     def toggle_line(line):
         if line.get_visible():
             line.set_visible(False)
         else:
             line.set_visible(True)
 
-    # Create a button for each asset to allow the user to toggle its visibility
     axcolor = "lightgoldenrodyellow"
     ax_x = 0.7
     ax_y = 0.05
@@ -158,20 +135,7 @@ def plot_asset_values(
         button = Button(button_ax, COINS[i])
         button.on_clicked(lambda event, line=lines[i]: toggle_line(line))
         ax_y += ax_spacing
-
-    # Show the plot to allow the user to interact with it
     plt.show()
-
-    # Create a button for each asset to allow the user to toggle its visibility
-    axcolor = "lightgoldenrodyellow"
-    ax_x = 0.7
-    ax_y = 0.05
-    ax_spacing = 0.05
-    for i in range(8):
-        button_ax = plt.axes([ax_x, ax_y, 0.1, 0.075])
-        button = Button(button_ax, COINS[i])
-        button.on_clicked(lambda event, line=lines[i]: toggle_line(line))
-        ax_y += ax_spacing
 
 
 def plot_weights_last_backtest(action_history, k=1):

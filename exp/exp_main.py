@@ -123,7 +123,11 @@ class Exp_Main:
             train_scores = []
             obs, train_steps = self.train_env.reset()
             total_steps = train_steps - (2 * self.args.seq_len + 1) + test_steps
-            with tqdm(total=total_steps, leave=self.args.colab, position=1) as pbar:
+            with tqdm(
+                total=total_steps,
+                leave=self.args.colab,
+                position=1 - int(self.args.colab),
+            ) as pbar:
                 while not done:
                     act = self.agent.choose_action(obs)
                     new_state, reward, done = self.train_env.step(act)

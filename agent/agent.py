@@ -10,6 +10,7 @@ from agent.replay_buffer import ReplayBuffer
 from agent.networks import CriticNetwork, ActorNetwork
 
 from utils.constants import *
+from utils.tools import logger
 
 
 class Agent(object):
@@ -20,10 +21,12 @@ class Agent(object):
         self.flag = flag
         self.memory = ReplayBuffer(args)
 
-        self.actor = ActorNetwork(args)
-        self.target_actor = copy.deepcopy(self.actor)
         self.critic = CriticNetwork(args)
         self.target_critic = copy.deepcopy(self.critic)
+        logger.info("initialize critics")
+        self.actor = ActorNetwork(args)
+        self.target_actor = copy.deepcopy(self.actor)
+        logger.info("initialze actors")
         self._create_checkpoint_files()
 
         if args.noise == "OU":

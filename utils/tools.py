@@ -125,5 +125,5 @@ def calculate_returns(filled_feature_matrix):
 def add_periods_to_datetime(date: str, granularity: int, periods: int) -> str:
     new_date = datetime.strptime(date, "%Y-%m-%d-%H-%M")
     new_date = new_date + timedelta(minutes=periods * granularity / 60)
-    new_date = date.strftime("%Y-%m-%d-%H-%M")
+    new_date = new_date.strftime("%Y-%m-%d-%H-%M")
     return new_date

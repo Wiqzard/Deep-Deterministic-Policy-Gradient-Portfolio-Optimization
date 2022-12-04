@@ -164,7 +164,7 @@ def plot_weight_changes_episodes(action_histories, k=1) -> None:
     for action_history in action_histories:
         average = np.average(action_history, axis=1)
         averages.append(average)
-        print(averages)
+    averages = np.array(averages)
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Average Portfolio Wheigts Per Episode")
 

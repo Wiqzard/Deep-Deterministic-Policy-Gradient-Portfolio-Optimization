@@ -140,7 +140,7 @@ def plot_weights_last_backtest(action_history, k=1):
 def plot_value_last_backtest(reward_history, k=1) -> None:
     k = 10
     plt.figure(figsize=(20, 5), dpi=80)
-    plt.title("Portfolio Value")
+    plt.title("Portfolio Value During Last Episode")
     portfolio_value = [
         START_VALUE * math.exp(np.sum(reward_history[:i]))
         for i in range(len(reward_history))
@@ -153,9 +153,9 @@ def plot_value_last_backtest(reward_history, k=1) -> None:
 
 def plot_results_episodes(end_scores) -> None:
     plt.figure(figsize=(20, 5), dpi=80)
-    plt.title("Portfolio Value")
+    plt.title("Resulting Portfolio Values Of Episodes")
 
-    plt.plot(START_VALUE * np.exp(end_scores))
+    plt.plot(START_VALUE * np.exp(end_scores.sum(axis=1)))
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.legend()
 

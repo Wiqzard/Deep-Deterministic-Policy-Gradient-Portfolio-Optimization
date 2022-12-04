@@ -130,11 +130,20 @@ class Agent(object):
         # self.target_actor.eval()
         # self.target_critic.eval()
         # self.critic.eval()
+        if self.args.use_amp:
+            critic_scaler = torch.cuda.amp.GradScaler()
+            actor_scaler = torch.cuda.amp.GradScaler()
 
         # <---------------------------- update critic ----------------------------> #
-        target_actions = self.target_actor.forward(new_state)
-        critic_value_ = self.target_critic.forward(new_state, target_actions)
-        critic_value = self.critic.forward(state, action)
+        if self.args.use_amp:
+            with torch.cuda.amp.autocast():
+                target_actions = self.target_actor.forward(new_state)
+                critic_value_ = self.target_critic.forward(new_state, target_actions)
+                critic_value = self.critic.forward(state, action)
+        else:
+            target_actions = self.target_actor.forward(new_state)
+            critic_value_ = self.target_critic.forward(new_state, target_actions)
+            critic_value = self.critic.forward(state, action)
 
         target = [
             reward[j] + self.args.gamma * critic_value_[j] * (1 - done[j])
@@ -146,19 +155,37 @@ class Agent(object):
         self.critic.zero_grad()  # .optimizer.zero_grad()
 
         critic_loss = self.MSE(target, critic_value)
-        critic_loss.backward()
-        self.critic.optimizer.step()
+
+        if self.args.use_amp:
+            critic_scaler.scale(critic_loss).backward()
+            critic_scaler.step(self.critic.optimizer)
+            critic_scaler.update()
+        else:
+            critic_loss.backward()
+            self.critic.optimizer.step()
 
         # <---------------------------- update actor ----------------------------> #
         # self.critic.eval()
         self.actor.zero_grad()  # optimizer.zero_grad()
-        mu = self.actor.forward(state)  # .unsqueeze(1).unsqueeze(1)
+
+        if self.args.use_amp:
+            with torch.cuda.amp.autocast():
+                mu = self.actor.forward(state)  # .unsqueeze(1).unsqueeze(1)
+        else:
+            mu = self.actor.forward(state)  # .unsqueeze(1).unsqueeze(1)
+
         # self.actor.train()
         actor_loss = -self.critic.forward(state, mu)
         actor_loss = torch.mean(actor_loss)
         # print(actor_loss)
-        actor_loss.backward()
-        self.actor.optimizer.step()
+
+        if self.args.use_amp:
+            actor_scaler.scaler(actor_loss).backward()
+            actor_scaler.step(self.actor.optimizer)
+            actor_scaler.update()
+        else:
+            actor_loss.backward()
+            self.actor.optimizer.step()
 
         self.update_network_parameters()
 

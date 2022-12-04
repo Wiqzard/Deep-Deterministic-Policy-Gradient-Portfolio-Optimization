@@ -17,8 +17,8 @@ import os
 logger = logging.getLogger()
 os.makedirs("/outputs", exist_ok=True)
 fhandler = logging.FileHandler(filename="/outputs/log.log", mode="a")
-formatter = logging.Formatter("%(asctime)s - %(message)s")
-fhandler.setFormatter(formatter)
+# formatter = logging.Formatter("%(asctime)s - %(message)s")
+# fhandler.setFormatter(formatter)
 logger.addHandler(fhandler)
 logger.setLevel(logging.INFO)
 

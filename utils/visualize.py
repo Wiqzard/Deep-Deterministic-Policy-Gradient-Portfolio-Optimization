@@ -126,7 +126,6 @@ def plot_asset_values(
         else:
             line.set_visible(True)
 
-    axcolor = "lightgoldenrodyellow"
     ax_x = 0.7
     ax_y = 0.05
     ax_spacing = 0.05
@@ -135,6 +134,8 @@ def plot_asset_values(
         button = Button(button_ax, COINS[i])
         button.on_clicked(lambda event, line=lines[i]: toggle_line(line))
         ax_y += ax_spacing
+    plt.interactive(False)
+    plt.ioff()
     plt.show()
 
 

@@ -46,7 +46,6 @@ class PriceHistory:
         label_len: int = 25,
         pred_len: int = 25,
         timeenc: int = 1,
-        scale: bool = False,
     ):
         self.coins = COINS
         self.num_assets = NUM_ASSETS
@@ -66,11 +65,6 @@ class PriceHistory:
         self.filled_feature_matrices = self.__fill_nan(
             self.__efficent_all(cash_bias=False)
         )
-
-        self.__set_data_stamp()
-        if scale:
-            self.filled_feature_matrices_scaled = None
-            self.__scale_feature_matrix(feature=0)
 
     def _check_dates(self) -> None:
         data_points = count_granularity_intervals(
@@ -260,10 +254,17 @@ class PriceHistory:
 
 
 class FedPriceData(Dataset):
-    def __init__(self, args, price_history: PriceHistory) -> None:
+    def __init__(self, args, scale, price_history: PriceHistory) -> None:
         super().__init__()
+
         self.args = args
         self.price_history = price_history
+
+        self.__set_data_stamp()
+
+        if scale:
+            self.filled_feature_matrices_scaled = None
+            self.__scale_feature_matrix(feature=0)
 
     def __len__(self) -> int:
         return (

@@ -18,7 +18,6 @@ class Environment:
             granularity=args.granularity,
             start_date=self.start_date,
             end_date=self.end_date,
-            scale=self.scale_state,
         )
 
         if args.compute_before:

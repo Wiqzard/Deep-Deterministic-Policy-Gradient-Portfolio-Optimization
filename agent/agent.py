@@ -22,6 +22,7 @@ class Agent(object):
         self.memory = ReplayBuffer(args)
 
         self.critic = CriticNetwork(args)
+        print(self.critic)
         self.target_critic = copy.deepcopy(self.critic)
         logger.info("initialize critics")
         self.actor = ActorNetwork(args)

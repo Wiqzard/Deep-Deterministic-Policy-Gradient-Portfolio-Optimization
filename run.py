@@ -100,13 +100,13 @@ def main():
     )
     parser.add_argument(
         "--scalar_decay",
-        type=int,
+        type=float,
         default=0.992,
         help="decay of scalar duhhh",
     )
     parser.add_argument(
         "--desired_distance",
-        type=int,
+        type=float,
         default=0.1,
         help="no idea what it does",
     )

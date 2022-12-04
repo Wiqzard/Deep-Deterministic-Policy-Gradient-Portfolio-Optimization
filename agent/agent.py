@@ -82,10 +82,10 @@ class Agent(object):
                     # print(action_noised)
                     distance = torch.sqrt(torch.mean(torch.square(mu - action_noised)))
                     # print(distance)
-                    if distance > self.desired_distance:
-                        self.scalar *= self.scalar_decay
-                    if distance < self.desired_distance:
-                        self.scalar /= self.scalar_decay
+                    if distance > self.args.desired_distance:
+                        self.scalar *= self.args.scalar_decay
+                    if distance < self.args.desired_distance:
+                        self.scalar /= self.args.scalar_decay
                     mu_prime = action_noised
 
                 elif self.args.noise == "randn":

@@ -48,7 +48,7 @@ class CriticNetwork(nn.Module):
 
     def load_checkpoint(self):
         logger.info("... loading checkpoint ...")
-        self.load_state_dict(torch.load.checkpoint_file)
+        self.load_state_dict(torch.load(self.checkpoint_file))
 
     def forward(self, state, action):
         action_1 = state[1].unsqueeze(-2).to(self.device)  # torch.Size([10, 1, 8])
@@ -105,9 +105,10 @@ class ActorNetwork(nn.Module):
 
     def load_checkpoint(self):
         print("... loading checkpoint ...")
-        self.load_state_dict(torch.load.checkpoint_file)
+        self.load_state_dict(torch.load(self.checkpoint_file))
 
-    def add_parameter_noise(self, scalar=0.1):
+    def add_parameter_noise(self, scalar=None):
+        scalar = scalar or self.args.scalar
         self.conv1.weight.data += torch.randn_like(self.conv1.weight.data) * scalar
         self.conv3.weight.data += torch.randn_like(self.conv3.weight.data) * scalar
         self.linear.weight.data += torch.randn_like(self.linear.weight.data) * scalar

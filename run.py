@@ -92,7 +92,24 @@ def main():
         default=100000,
         help="maximum size of the replay buffer for the DDPG agent",
     )
-
+    parser.add_argument(
+        "--scalar",
+        type=float,
+        default=0.1,
+        help="scalar for random weights",
+    )
+    parser.add_argument(
+        "--scalar_decay",
+        type=int,
+        default=0.992,
+        help="decay of scalar duhhh",
+    )
+    parser.add_argument(
+        "--desired_distance",
+        type=int,
+        default=0.1,
+        help="no idea what it does",
+    )
     # Networks
     parser.add_argument(
         "--critic_learning_rate",

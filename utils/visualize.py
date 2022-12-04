@@ -171,10 +171,8 @@ def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
         returns = calculate_returns(data).values
         returns_per_episode = returns.sum(axis=1)
         portfolio_value_ubah = [
-            START_VALUE
-            * math.exp(
-                np.sum(returns_per_episode[:i] for i in range(len(returns_per_episode)))
-            )
+            START_VALUE * math.exp(np.sum(returns_per_episode[:i]))
+            for i in range(len(returns_per_episode))
         ]
         plt.plot(
             range(0, len(portfolio_value_ubah), k),

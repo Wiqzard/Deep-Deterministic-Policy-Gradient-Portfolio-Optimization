@@ -18,7 +18,7 @@ class CriticNetwork(nn.Module):
         self.conv2 = nn.Conv2d(
             in_channels=2, out_channels=64, kernel_size=(args.seq_len - 2, 1)
         )
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=(1, 1))
+        self.conv3 = nn.Conv2d(in_channels=65, out_channels=1, kernel_size=(1, 1))
 
         self.bn1 = nn.LayerNorm([1, 1, NUM_ASSETS])
 

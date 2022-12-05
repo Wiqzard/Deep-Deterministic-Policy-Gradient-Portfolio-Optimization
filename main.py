@@ -119,37 +119,47 @@ def test_steps():
     plot_asset_values(p.filled_feature_matrices[0], args.granularity, True)
 
 
-test_steps()
-
-path_results = "outputs/results"
-if not os.listdir(path_results):
-    logger.warn("The path is empty")
-else:
-    train_scores_episodes = np.load(
-        os.path.join(path_results, "train_scores_episodes.npy"), allow_pickle=True
-    )
-    test_scores_episodes = np.load(
-        os.path.join(path_results, "test_scores_episodes.npy"), allow_pickle=True
-    )
-    train_action_histories = np.load(
-        os.path.join(path_results, "train_action_histories.npy"), allow_pickle=True
-    )
-    test_action_histories = np.load(
-        os.path.join(path_results, "test_action_histories.npy"), allow_pickle=True
-    )
-    plot_train = False
-    last_train_action_history = train_action_histories[-1]
-    last_test_action_history = test_action_histories[-1]
-    last_train_scores = train_scores_episodes[-1]
-    last_test_scores = test_scores_episodes[-1]
-
-    if plot_train:
-        plot_weights_last_backtest(last_train_action_history, k=1)
-        plot_value_last_backtest(last_train_scores, args, "train", k=1)
-        plot_results_episodes(train_scores_episodes)
-        plot_weight_changes_episodes(train_action_histories)
+def plot_test():
+    path_results = "outputs/results"
+    if not os.listdir(path_results):
+        logger.warn("The path is empty")
     else:
-        plot_weights_last_backtest(last_test_action_history, k=1)
-        plot_value_last_backtest(last_test_scores, args, "test", k=1)
-        plot_results_episodes(test_scores_episodes)
-        plot_weight_changes_episodes(test_action_histories)
+        train_scores_episodes = np.load(
+            os.path.join(path_results, "train_scores_episodes.npy"), allow_pickle=True
+        )
+        test_scores_episodes = np.load(
+            os.path.join(path_results, "test_scores_episodes.npy"), allow_pickle=True
+        )
+        train_action_histories = np.load(
+            os.path.join(path_results, "train_action_histories.npy"), allow_pickle=True
+        )
+        test_action_histories = np.load(
+            os.path.join(path_results, "test_action_histories.npy"), allow_pickle=True
+        )
+        plot_train = False
+        last_train_action_history = train_action_histories[-1]
+        last_test_action_history = test_action_histories[-1]
+        last_train_scores = train_scores_episodes[-1]
+        last_test_scores = test_scores_episodes[-1]
+
+        if plot_train:
+            plot_weights_last_backtest(last_train_action_history, k=1)
+            plot_value_last_backtest(last_train_scores, args, "train", k=1)
+            plot_results_episodes(train_scores_episodes)
+            plot_weight_changes_episodes(train_action_histories)
+        else:
+            plot_weights_last_backtest(last_test_action_history, k=1)
+            plot_value_last_backtest(last_test_scores, args, "test", k=1)
+            plot_results_episodes(test_scores_episodes)
+            plot_weight_changes_episodes(test_action_histories)
+
+
+# test_steps()
+# plot_test()
+
+from utils.visualize import plot_portfolio_algos, plot_model
+
+args.commission_rate_selling = 0
+# plot_model(args, "OLMAR", flag="full")
+# plot_portfolio_algos(args, flag="full")
+plot_portfolio_algos(args, "full")

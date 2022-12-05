@@ -152,7 +152,6 @@ class Anticor(PortfolioManager):
     def __init__(self, args, flag, window=30):
         """
         :param window: Window parameter.
-        :param c_version: Use c_version, up to 10x speed-up.
         """
         super().__init__(args, flag=flag)
         self.window = window
@@ -207,7 +206,7 @@ class OLMAR(PortfolioManager):
             x * w >= eps for new weights w.
         """
 
-        super().__init__(args, flag, min_history=window)
+        super().__init__(args, flag=flag, min_history=window)
         self.name = "OLMAR"
         # input check
         window = 10
@@ -218,6 +217,7 @@ class OLMAR(PortfolioManager):
             raise ValueError("epsilon parameter must be >=1")
         self.window = window
         self.eps = eps
+        self.min_history = 20
 
     def init_weights(self, columns):
         m = len(columns)
@@ -236,15 +236,15 @@ class OLMAR(PortfolioManager):
         """Update portfolio weights to satisfy constraint b * x >= eps
         and minimize distance to previous weights."""
         x_pred_mean = np.mean(x_pred)
+
         lam = max(
-            0.0, (eps - np.dot(b, x_pred)) / np.linalg.norm(x_pred - x_pred_mean) ** 2
+            0.0,
+            (eps - np.dot(b, x_pred)) / np.linalg.norm(x_pred - x_pred_mean) ** 2,
         )
         # limit lambda to avoid numerical problems
-        lam = min(100000, lam)
-
+        lam = min(1000, lam)
         # update portfolio
         b = b + lam * (x_pred - x_pred_mean)
-
         # project it onto simplex
         return simplex_proj(b)
 
@@ -269,7 +269,7 @@ class RMR(OLMAR):
         :param tau: Precision for finding median. Recommended value is around 0.001. Strongly
                     affects algo speed.
         """
-        super().__init__(args, window, eps, flag)  # =flag)
+        super().__init__(args, flag, window, eps)  # =flag)
         self.tau = tau
         self.name = "RMR"
 

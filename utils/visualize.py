@@ -8,7 +8,7 @@ from utils.tools import train_test_split, add_periods_to_datetime
 from data_management.data_manager import PriceHistory
 
 
-def plot_model(args, model_name=str, flag="train") -> None:
+def plot_model(args, model_name=str, flag="full") -> None:
     if model_name == "CRP":
         model = CRP(args=args, flag=flag)
     elif model_name == "UBAH":
@@ -38,11 +38,11 @@ def plot_model(args, model_name=str, flag="train") -> None:
 def plot_portfolio_algos(args, flag="train", commission=None):
     ubah = UBAH(args=args, flag=flag)
     crp = CRP(args=args, flag=flag)
-    olmar = OLMAR(args=args, flag=flag)
     bestmarkowitz = BestMarkowitz(args=args, flag=flag)
     up = UP(args=args, flag=flag)
     anticor = Anticor(args=args, flag=flag)
     rmr = RMR(args=args, flag=flag)
+    olmar = OLMAR(args=args, flag=flag)
 
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Values")

@@ -160,7 +160,8 @@ class ActorNetwork(nn.Module):
         action = torch.cat((action, action_1), dim=-1)
         action = self.fc3(action).squeeze()
         # print("5")
-        # print(action)
+        if self.args_abb:
+            print(action)
 
         #        cash_bias = torch.cat(
         #            (

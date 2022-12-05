@@ -45,6 +45,9 @@ def main():
         help="has to be set if used in google colab",
     )
     parser.add_argument(
+        "--reward_multiplier", type=int, default=1, help="increase reward for learning"
+    )
+    parser.add_argument(
         "--use_numeraire",
         type=bool,
         default=True,

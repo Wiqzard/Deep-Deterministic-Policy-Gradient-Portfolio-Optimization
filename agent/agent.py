@@ -113,8 +113,8 @@ class Agent(object):
         state, action, reward, new_state, done = self.memory.sample_buffer(
             self.args.batch_size
         )
-
-        reward = torch.tensor(reward).float().to(self.critic.device)
+        reward_multiplier = self.args.reward_multiplier
+        reward = torch.tensor(reward).float().to(self.critic.device) * reward_multiplier
         done = torch.tensor(done).float().to(self.critic.device)
         new_state = (
             torch.tensor(new_state[0]).float().to(self.critic.device),

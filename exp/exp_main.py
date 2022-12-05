@@ -87,11 +87,11 @@ class Exp_Main:
             if self.args.use_numeraire:
                 numeraire_ratio_train = self.train_env.get_numeraire_ratio()
                 train_value = self.initial_value * (
-                    math.exp(sum(train_scores[1:])) + numeraire_ratio_train
+                    math.exp(sum(train_scores[1:])) * numeraire_ratio_train
                 )
                 numeraire_ratio_test = self.test_env.get_numeraire_ratio()
                 test_value = self.initial_value * (
-                    math.exp(sum(test_scores[1:])) + numeraire_ratio_test
+                    math.exp(sum(test_scores[1:])) * numeraire_ratio_test
                 )
             else:
                 train_value = self.initial_value * math.exp(sum(train_scores))
@@ -164,6 +164,7 @@ class Exp_Main:
             if episode % 5 == 0 and episode != 0:
                 self.agent.save_models()
             self.save_results()
+            # print(self.train_env.reward_history)
 
     def backtest(self, bar=None, env=None) -> None:
         score_history = []

@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from utils.constants import *
 from portfolio_manager.algorithms import *
 from agent.noise import OUActionNoisePlain
 import math
-from utils.tools import train_test_split
+from utils.tools import train_test_split, add_periods_to_datetime
 from data_management.data_manager import PriceHistory
 
 
@@ -137,13 +136,13 @@ def plot_weights_last_backtest(action_history, k=1):
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.axhline(y=0.125, color="black")
     plt.legend()
+    plt.show()
 
 
 from utils.tools import calculate_returns
 
 
 def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
-    k = 10
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Portfolio Value During Last Episode")
     portfolio_value = [
@@ -160,6 +159,7 @@ def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
             args.ratio, args.granularity, args.start_date, args.end_date
         )
         start_date, end_date = (s_tr, e_tr) if flag == "train" else (s_te, e_te)
+        start_date = add_periods_to_datetime(start_date, args.granularity, args.seq_len)
         state_space = PriceHistory(
             args,
             num_periods=args.seq_len,
@@ -167,6 +167,7 @@ def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
             start_date=start_date,
             end_date=end_date,
         )
+        print(len(state_space))
         data = state_space.filled_feature_matrices[0]
         returns = calculate_returns(data).iloc[1:, :].values
         returns_per_episode = returns.sum(axis=1)
@@ -181,6 +182,7 @@ def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
         )
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.legend()
+    plt.show()
 
 
 def plot_results_episodes(end_scores) -> None:
@@ -212,6 +214,7 @@ def plot_weight_changes_episodes(action_histories) -> None:
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.axhline(y=0.125, color="black")
     plt.legend()
+    plt.show()
 
 
 # def plot_ou_action_noise(mu, sigma, theta, x0, dt, steps):

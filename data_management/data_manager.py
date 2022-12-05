@@ -70,14 +70,8 @@ class PriceHistory:
     def __len__(self) -> int:
         return len(self.filled_feature_matrices[0])
 
-    def __scale_feature_matrix(self, feature: int = 0) -> None:
-        self.scaler = StandardScaler()
-        feature_matrix = self.filled_feature_matrices[feature]
-        self.scaler.fit(feature_matrix.iloc[:, 1:].values)
-        closes_ = self.scaler.transform(feature_matrix.iloc[:, 1:].values)
-        self.filled_feature_matrices_scaled[feature].iloc[:, 1:] = closes_
+        # Implement error handling
 
-    # Implement error handling
     def __set_data_matrix(
         self, granularity: int = None, start_date: str = None, end_date: str = None
     ) -> None:
@@ -93,11 +87,14 @@ class PriceHistory:
                     coin=coin, granularity=gran, start_date=s_date, end_date=e_date
                 )
                 if self.data_base
-                else self.retrieve_data(
-                    ticker=coin, granularity=gran, start_data=s_date, end_date=e_date
-                )
+                else None
             )
-
+            #       else
+            #
+            #           self.retrieve_data(
+            #           ticker=coin, granularity=gran, start_data=s_date, end_date=e_date
+            #       )
+            #   )
             self.data_matrix.append(data)
 
     def get_list_of_npm(self) -> List[pd.DataFrame]:
@@ -250,7 +247,9 @@ class PriceHistory:
 
 
 class FedPriceData(Dataset):
-    def __init__(self, args, scale, price_history: PriceHistory) -> None:
+    def __init__(
+        self, args, scale, price_history: PriceHistory, timeenc, label_len, pred_len
+    ) -> None:
         super().__init__()
 
         self.args = args
@@ -304,3 +303,10 @@ class FedPriceData(Dataset):
 
     def inverse_transform(self, data) -> np.array:
         return self.scaler.inverse_transform(data)
+
+    def __scale_feature_matrix(self, feature: int = 0) -> None:
+        self.scaler = StandardScaler()
+        feature_matrix = self.filled_feature_matrices[feature]
+        self.scaler.fit(feature_matrix.iloc[:, 1:].values)
+        closes_ = self.scaler.transform(feature_matrix.iloc[:, 1:].values)
+        self.filled_feature_matrices_scaled[feature].iloc[:, 1:] = closes_

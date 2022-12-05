@@ -8,7 +8,6 @@ import os
 
 from utils.constants import *
 from data_management.coin_database import CoinDatabase
-from utils.tools import logger
 from exp.exp_main import Exp_Main
 from utils.visualize import (
     plot_asset_values,
@@ -23,6 +22,12 @@ from environment.environment import Environment
 # agent
 def main():
     warnings.filterwarnings("ignore")
+    logger = logging.getLogger("__name__")
+    level = logging.INFO
+    logger.setLevel(level)
+    ch = logging.StreamHandler()
+    ch.setLevel(level)
+    logger.addHandler(ch)
 
     fix_seed = 1401
     random.seed(fix_seed)

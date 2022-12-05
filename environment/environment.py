@@ -24,7 +24,11 @@ class Environment:
             self.all_npms = self.state_space.filled_feature_matrices
 
         self.period = 0
-        self.start_action = [1] + (NUM_ASSETS - 1) * [0]
+        self.start_action = (
+            np.array([1] + (NUM_ASSETS - 1) * [0])
+            if args.use_numeraire
+            else np.array(NUM_ASSETS * [1 / NUM_ASSETS])
+        )
         self.reward_history = []
         self.state_history = []
         self.action_history = []
@@ -83,9 +87,8 @@ class Environment:
         self.period = 0
         npm = self.state_space.normalized_price_matrix(self.period)
         # npm = self.all_npms[self.period-1] if self.compute_before else self.state_space.normalized_price_matrix(self.period)# cash_bias=True)
-        start_state = npm, np.array(
-            [1] + [0 for _ in range(self.state_space.num_assets - 1)]
-        )
+        start_state = npm, self.start_action
+
         total_steps = self.num_steps - self.period
         self.reward_history = []
         self.state_history = [start_state]

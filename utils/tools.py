@@ -8,12 +8,7 @@ import sys
 
 import os
 
-# logger = logging.getLogger("__name__")
-# level = logging.INFO
-# logger.setLevel(level)
-# ch = logging.StreamHandler()
-# ch.setLevel(level)
-# logger.addHandler(ch)
+
 logger = logging.getLogger()
 os.makedirs("outputs", exist_ok=True)
 # s.mkdir("outputs")
@@ -22,6 +17,9 @@ fhandler = logging.FileHandler(filename="outputs/log.log", mode="a")
 # fhandler.setFormatter(formatter)
 logger.addHandler(fhandler)
 logger.setLevel(logging.INFO)
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+logger.addHandler(ch)
 
 
 class dotdict(dict):

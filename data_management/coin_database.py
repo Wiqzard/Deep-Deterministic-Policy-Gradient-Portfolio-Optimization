@@ -118,7 +118,7 @@ class CoinDatabase:
                 else:
                     data_after = None
 
-            query = f'INSERT INTO "{table_name}" (time, low, high, open, close, volume) VALUES (?, ?, ?, ?, ?, ?)'
+            query = f'INSERT OR IGNORE INTO "{table_name}" (time, low, high, open, close, volume) VALUES (?, ?, ?, ?, ?, ?)'
 
             for data in [data_before, data_after]:
                 if data is not None:

@@ -159,7 +159,9 @@ def plot_value_last_backtest(reward_history, args=None, flag=None, k=1) -> None:
             args.ratio, args.granularity, args.start_date, args.end_date
         )
         start_date, end_date = (s_tr, e_tr) if flag == "train" else (s_te, e_te)
-        start_date = add_periods_to_datetime(start_date, args.granularity, args.seq_len)
+        start_date = add_periods_to_datetime(
+            start_date, args.granularity, args.seq_len - 1
+        )
         state_space = PriceHistory(
             args,
             num_periods=args.seq_len,

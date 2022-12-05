@@ -11,6 +11,7 @@ args = dotdict()
 args.is_training = True
 args.colab = False
 args.linear2 = 64
+args.conv_dim = 64
 args.noise = "OU"
 args.sigma = 0.25
 args.theta = 0.25

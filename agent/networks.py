@@ -16,9 +16,11 @@ class CriticNetwork(nn.Module):
             in_channels=NUM_FEATURES, out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
-            in_channels=2, out_channels=64, kernel_size=(args.seq_len - 2, 1)
+            in_channels=2, out_channels=args.conv_dim, kernel_size=(args.seq_len - 2, 1)
         )
-        self.conv3 = nn.Conv2d(in_channels=65, out_channels=1, kernel_size=(1, 1))
+        self.conv3 = nn.Conv2d(
+            in_channels=args.conv_dim + 1, out_channels=1, kernel_size=(1, 1)
+        )
 
         self.bn1 = nn.LayerNorm([1, 1, NUM_ASSETS])
 
@@ -79,10 +81,12 @@ class ActorNetwork(nn.Module):
             in_channels=NUM_FEATURES, out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
-            in_channels=2, out_channels=64, kernel_size=(args.seq_len - 2, 1)
+            in_channels=2, out_channels=args.conv_dim, kernel_size=(args.seq_len - 2, 1)
         )  # 64 20
 
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=(1, 1))
+        self.conv3 = nn.Conv2d(
+            in_channels=args.conv_dim + 1, out_channels=1, kernel_size=(1, 1)
+        )
         self.linear = nn.Linear(in_features=NUM_ASSETS, out_features=args.linear2)
         self.linear2 = nn.Linear(in_features=args.linear2, out_features=NUM_FEATURES)
 

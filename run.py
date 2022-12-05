@@ -51,6 +51,9 @@ def main():
         "--linear2", type=int, default=64, help="layer neurons"
     )
     parser.add_argument(
+        "--conv_dim", type=int, default=64, help="layer neurons"
+    )
+    parser.add_argument(
         "--use_numeraire",
         type=bool,
         default=True,

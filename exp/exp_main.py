@@ -15,8 +15,6 @@ class Exp_Main:
         self.agent = self._set_agent()
         self.train_env = self._set_environment(flag="train")
         self.test_env = self._set_environment(flag="test")
-        print(self.train_env.num_steps)
-        print(self.test_env.num_steps)
         self.train_benchmark = self.get_benchmark(args.benchmark_name, flag="train")
         self.test_benchmark = self.get_benchmark(args.benchmark_name, flag="test")
 

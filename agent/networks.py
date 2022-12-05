@@ -135,6 +135,7 @@ class ActorNetwork(nn.Module):
             ),
             dim=-1,
         ).to(self.device)
-        action = torch.add(action, cash_bias)
+        if self.args.use_numeraire:
+            action = torch.add(action, cash_bias)
         action = self.softmax(action)
         return action

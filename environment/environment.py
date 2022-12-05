@@ -51,6 +51,12 @@ class Environment:
             self.start_date = self.args.start_date
             self.end_date = self.args.end_date
 
+    def get_numeraire_ratio(self):
+        first_value = self.state_space.filled_feature_matrices[0].values[0, 0]
+        last_value = self.state_space.filled_feature_matrices[0].values[0, -1]
+
+        return (last_value / first_value).item()
+
     @property
     def num_steps(self) -> int:
         return len(self.state_space)

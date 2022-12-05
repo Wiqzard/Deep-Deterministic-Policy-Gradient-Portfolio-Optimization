@@ -83,10 +83,23 @@ class Exp_Main:
     ):
         """Logs the training result after each episode"""
         if train_scores and test_scores:
-            train_value = self.initial_value * math.exp(sum(train_scores))
-            test_value = (
-                self.initial_value * math.exp(sum(test_scores)) if test_scores else 0
-            )
+
+            if self.args.use_numeraire:
+                numeraire_ratio_train = self.train_env.get_numeraire_ratio()
+                train_value = self.initial_value * (
+                    math.exp(sum(train_scores[1:])) + numeraire_ratio_train
+                )
+                numeraire_ratio_test = self.test_env.get_numeraire_ratio()
+                test_value = self.initial_value * (
+                    math.exp(sum(test_scores[1:])) + numeraire_ratio_test
+                )
+            else:
+                train_value = self.initial_value * math.exp(sum(train_scores))
+                test_value = (
+                    self.initial_value * math.exp(sum(test_scores))
+                    if test_scores
+                    else 0
+                )
             logger.info(
                 f"Episode: {episode} --- Train Value: {train_value:.2f} --- Test Value: {test_value:.2f}"
             )

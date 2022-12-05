@@ -125,3 +125,8 @@ def add_periods_to_datetime(date: str, granularity: int, periods: int) -> str:
     new_date = new_date + timedelta(minutes=periods * granularity / 60)
     new_date = new_date.strftime("%Y-%m-%d-%H-%M")
     return new_date
+
+
+    
+    
+    

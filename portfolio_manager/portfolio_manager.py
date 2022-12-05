@@ -79,7 +79,7 @@ class PortfolioManager:
         self.start_date = start_date_train if flag == "train" else start_date_test
         self.end_date = end_date_train if flag == "train" else end_date_test
         self.start_date = add_periods_to_datetime(
-            self.start_date, self.args.granularity, self.args.seq_len
+            self.start_date, self.args.granularity, self.args.seq_len - 1
         )
         if flag == "full":
             self.start_date = self.args.start_date

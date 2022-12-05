@@ -10,6 +10,7 @@ output/
 *.db
 coin_history.db
 .ipynb_checkpoints/
+log_loss.txt
 # C extensions
 *.so
 .vscode/

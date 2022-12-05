@@ -26,7 +26,6 @@ class Agent(object):
             self.target_critic = CriticNetwork(args)
             self.target_actor = ActorNetwork(args)
             self.update_network_parameters(tau=1)
-
         else:
             self.target_critic = copy.deepcopy(self.critic)
             self.target_actor = copy.deepcopy(self.actor)
@@ -65,22 +64,16 @@ class Agent(object):
                 if self.args.noise == "OU":
                     noise = torch.tensor(self.noise()).float().to(self.device)
                     if True:
-                        noise = torch.clip(noise, 0, self.args.sigma)
-                    mu_prime = torch.abs(
-                        mu + noise
-                    )  # maybe add torch abs only to noise
-                    mu_prime = mu_prime / sum(
-                        mu_prime
-                    )  # nn.functional.softmax(mu_prime)
+                        noise = torch.clip(noise, self.args.sigma, self.args.sigma)
+                    mu_prime = torch.abs(mu + noise)
+                    mu_prime = mu_prime / sum(mu_prime)
 
                 elif self.args.noise == "param":
                     self.actor_noised.eval()
                     self.actor_noised.load_state_dict(self.actor.state_dict().copy())
                     self.actor_noised.add_parameter_noise(self.scalar)
                     action_noised = self.actor_noised(oberservation).to(self.device)
-                    # print(action_noised)
                     distance = torch.sqrt(torch.mean(torch.square(mu - action_noised)))
-                    # print(distance)
                     if distance > self.args.desired_distance:
                         self.scalar *= self.args.scalar_decay
                     if distance < self.args.desired_distance:
@@ -157,11 +150,10 @@ class Agent(object):
         ]
         target = torch.tensor(target).float().to(self.critic.device)
         target = target.view(self.args.batch_size, 1).squeeze()
-        # self.critic.train()
-        self.critic.zero_grad()  # .optimizer.zero_grad()
 
         critic_loss = self.MSE(target, critic_value)
 
+        self.critic.zero_grad()
         if self.args.use_amp:
             critic_scaler.scale(critic_loss).backward()
             critic_scaler.step(self.critic.optimizer)
@@ -171,20 +163,18 @@ class Agent(object):
             self.critic.optimizer.step()
 
         # <---------------------------- update actor ----------------------------> #
-        # self.critic.eval()
-        self.actor.zero_grad()  # optimizer.zero_grad()
 
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
-                mu = self.actor.forward(state)  # .unsqueeze(1).unsqueeze(1)
+                mu = self.actor.forward(state)
         else:
-            mu = self.actor.forward(state)  # .unsqueeze(1).unsqueeze(1)
+            mu = self.actor.forward(state)
 
-        # self.actor.train()
         actor_loss = -self.critic.forward(state, mu)
         actor_loss = torch.mean(actor_loss)
         # print(actor_loss)
 
+        self.actor.zero_grad()
         if self.args.use_amp:
             actor_scaler.scaler(actor_loss).backward()
             actor_scaler.step(self.actor.optimizer)
@@ -194,6 +184,9 @@ class Agent(object):
             self.actor.optimizer.step()
 
         self.update_network_parameters()
+        with open("log_loss.txt", "a+") as f:
+            f.write(f"Actor loss: {actor_loss.item()}\n")
+            f.write(f"Critic loss: {critic_loss.item()}\n")
 
     def update_network_parameters(self, tau=None):
         self.tau = self.args.tau

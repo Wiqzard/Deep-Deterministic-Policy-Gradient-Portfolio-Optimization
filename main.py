@@ -102,6 +102,9 @@ def test_steps():
     env_train = Environment(args=args, flag="train")
     env_test = Environment(args=args, flag="test")
 
+    print(env.get_numeraire_ratio())
+    print(env.state_space.filled_feature_matrices[0])
+
     print(f"number of steps in env: {env.num_steps}")
     print(f"number of steps in env_train: {env_train.num_steps}")
     print(f"number of steps in env_test: {env_test.num_steps}")
@@ -154,7 +157,7 @@ def plot_test():
             plot_weight_changes_episodes(test_action_histories)
 
 
-# test_steps()
+test_steps()
 # plot_test()
 
 from utils.visualize import plot_portfolio_algos, plot_model
@@ -162,4 +165,4 @@ from utils.visualize import plot_portfolio_algos, plot_model
 args.commission_rate_selling = 0
 # plot_model(args, "OLMAR", flag="full")
 # plot_portfolio_algos(args, flag="full")
-plot_portfolio_algos(args, "full")
+# plot_portfolio_algos(args, "full")

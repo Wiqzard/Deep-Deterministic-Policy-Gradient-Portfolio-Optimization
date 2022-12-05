@@ -1,6 +1,6 @@
 import numpy as np
 import math
-
+from typing import Tuple, List, Dict
 from utils.constants import *
 from utils.tools import train_test_split
 from data_management.data_manager import PriceHistory
@@ -89,7 +89,7 @@ class Environment:
         self.reward_history.append(r_t)
         return r_t
 
-    def reset(self):
+    def reset(self) -> Tuple[Tuple, int]:
         """
         Reset attributes
         retun start state

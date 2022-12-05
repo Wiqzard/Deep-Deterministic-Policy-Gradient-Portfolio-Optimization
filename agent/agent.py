@@ -64,10 +64,9 @@ class Agent(object):
                 if self.args.noise == "OU":
                     noise = torch.tensor(self.noise()).float().to(self.device)
                     if True:
-                        noise = torch.clip(noise, self.args.sigma, self.args.sigma)
+                        noise = torch.clip(noise, -self.args.sigma, self.args.sigma)
                     mu_prime = torch.abs(mu + noise)
                     mu_prime = mu_prime / sum(mu_prime)
-                    print(mu_prime)
                 elif self.args.noise == "param":
                     self.actor_noised.eval()
                     self.actor_noised.load_state_dict(self.actor.state_dict().copy())

@@ -16,10 +16,10 @@ fhandler = logging.FileHandler(filename="outputs/log.log", mode="a")
 # formatter = logging.Formatter("%(asctime)s - %(message)s")
 # fhandler.setFormatter(formatter)
 logger.addHandler(fhandler)
-logger.setLevel(logging.INFO)
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-logger.addHandler(ch)
+##logger.setLevel(logging.INFO)
+##ch = logging.StreamHandler()
+##ch.setLevel(logging.INFO)
+##logger.addHandler(ch)
 
 
 class dotdict(dict):

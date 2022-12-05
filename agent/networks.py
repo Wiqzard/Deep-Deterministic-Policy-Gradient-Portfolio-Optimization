@@ -14,18 +14,19 @@ class CriticNetwork(nn.Module):
         self.args = args
 
         self.conv1 = nn.Conv2d(
-            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(3, 1)
+            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(5, 1)
         )
         self.conv2 = nn.Conv2d(
             in_channels=args.conv1_out,
             out_channels=args.conv2_out,
-            kernel_size=(3, 3),
+            kernel_size=(5, 3),
         )
         self.conv3 = nn.Conv2d(
-            in_channels=args.conv2_out, out_channels=args.conv3_out, kernel_size=(3, 2)
+            in_channels=args.conv2_out, out_channels=args.conv3_out, kernel_size=(5, 2)
         )
+        self.layer_norm = nn.LayerNorm((args.conv3_out * 17 * 5))
         self.fc1 = nn.Linear(
-            in_features=args.conv3_out * 21 * 5, out_features=args.fc1_out
+            in_features=args.conv3_out * 17 * 5, out_features=args.fc1_out
         )
         self.fc2 = nn.Linear(in_features=args.fc1_out, out_features=32)
         self.fc3 = nn.Linear(in_features=40, out_features=16)
@@ -46,11 +47,12 @@ class CriticNetwork(nn.Module):
         state_value = self.conv3(state_value)
 
         state_value = torch.flatten(state_value, 1)
+        state_value = self.layer_norm(state_value)
         state_value = F.relu(self.fc1(state_value))
-        state_value = F.relu(self.fc2(state_value))
+        state_value = F.sigmoid(self.fc2(state_value))
 
         state_value = torch.cat((state_value, action_1), dim=-1)
-        state_value = F.relu(self.fc3(state_value))
+        state_value = F.sigmoid(self.fc3(state_value))
 
         state_action_value = torch.cat((state_value, action), dim=-1)
         state_action_value = self.fc4(state_action_value)
@@ -79,20 +81,23 @@ class ActorNetwork(nn.Module):
         super(ActorNetwork, self).__init__()
         self.args = args
         self.conv1 = nn.Conv2d(
-            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(3, 1)
+            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(5, 1)
         )
         self.conv2 = nn.Conv2d(
             in_channels=args.conv1_out,
             out_channels=args.conv2_out,
-            kernel_size=(3, 3),
+            kernel_size=(5, 3),
         )
 
         self.conv3 = nn.Conv2d(
-            in_channels=args.conv2_out, out_channels=args.conv3_out, kernel_size=(3, 2)
+            in_channels=args.conv2_out, out_channels=args.conv3_out, kernel_size=(5, 2)
         )
         self.fc1 = nn.Linear(
-            in_features=args.conv3_out * 21 * 5, out_features=args.fc1_out
+            in_features=args.conv3_out * 17 * 5, out_features=args.fc1_out
         )
+
+        self.layer_norm = nn.LayerNorm((args.conv3_out * 17 * 5))
+
         self.fc2 = nn.Linear(in_features=args.fc1_out, out_features=32)
         self.fc3 = nn.Linear(in_features=40, out_features=8)
 
@@ -144,10 +149,12 @@ class ActorNetwork(nn.Module):
         x = torch.flatten(x, 1)
         print("2")
         print(x)
+        x = self.layer_norm(x)
+        print(x)
         x = F.relu(self.fc1(x))
         print("3")
         print(x)
-        action = F.relu(self.fc2(x))
+        action = F.sigmoid(self.fc2(x))
         print("4")
         print(action)
         action = torch.cat((action, action_1), dim=-1)

@@ -53,7 +53,7 @@ class Environment:
 
     def get_numeraire_ratio(self):
         first_value = (
-            self.state_space.filled_feature_matrices[0].iloc[:, 1:].values[0, 0]
+            self.state_space.filled_feature_matrices[0].iloc[:, 1:].values[0, 51]
         )
         last_value = (
             self.state_space.filled_feature_matrices[0].iloc[:, 1:].values[0, -1]

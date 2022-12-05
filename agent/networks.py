@@ -39,7 +39,6 @@ class CriticNetwork(nn.Module):
         action_1 = state[1].to(self.device)
         action = action.to(self.device)
         state_value = state[0].to(self.device)
-        print(state_value.shape)
 
         state_value = F.relu(self.conv1(state_value))
         state_value = F.relu(self.conv2(state_value))
@@ -284,7 +283,6 @@ class ActorNetwork2(nn.Module):
         state_value = state[0].to(self.device)
 
         x = self.relu(self.conv1(state_value))
-        print(x)
         x = self.relu(self.conv2(x)).squeeze(-2).permute(0, 2, 1)
         x = torch.cat((x, action_1), dim=-1).permute(0, 2, 1).unsqueeze(-1)
         action = self.conv3(x).squeeze()

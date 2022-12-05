@@ -10,6 +10,7 @@ from utils.tools import logger, add_periods_to_datetime
 args = dotdict()
 args.is_training = True
 args.colab = False
+args.linear2 = 64
 args.noise = "OU"
 args.sigma = 0.25
 args.theta = 0.25
@@ -157,7 +158,7 @@ def plot_test():
             plot_weight_changes_episodes(test_action_histories)
 
 
-test_steps()
+# test_steps()
 # plot_test()
 
 from utils.visualize import plot_portfolio_algos, plot_model
@@ -166,3 +167,14 @@ args.commission_rate_selling = 0
 # plot_model(args, "OLMAR", flag="full")
 # plot_portfolio_algos(args, flag="full")
 # plot_portfolio_algos(args, "full")
+
+from agent.networks import ActorNetwork, CriticNetwork
+
+actor = ActorNetwork(args)
+critic = CriticNetwork(args)
+
+an = sum(p.numel() for p in actor.parameters() if p.requires_grad)
+cn = sum(p.numel() for p in critic.parameters() if p.requires_grad)
+
+print(an)
+print(cn)

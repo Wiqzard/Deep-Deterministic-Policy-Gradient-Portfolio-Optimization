@@ -48,6 +48,9 @@ def main():
         "--reward_multiplier", type=int, default=1, help="increase reward for learning"
     )
     parser.add_argument(
+        "--linear2", type=int, default=64, help="layer neurons"
+    )
+    parser.add_argument(
         "--use_numeraire",
         type=bool,
         default=True,

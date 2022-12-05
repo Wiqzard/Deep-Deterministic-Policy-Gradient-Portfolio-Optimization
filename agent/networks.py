@@ -16,9 +16,9 @@ class CriticNetwork(nn.Module):
             in_channels=NUM_FEATURES, out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
-            in_channels=2, out_channels=20, kernel_size=(args.seq_len - 2, 1)
+            in_channels=2, out_channels=64, kernel_size=(args.seq_len - 2, 1)
         )
-        self.conv3 = nn.Conv2d(in_channels=21, out_channels=1, kernel_size=(1, 1))
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=(1, 1))
 
         self.bn1 = nn.LayerNorm([1, 1, NUM_ASSETS])
 
@@ -79,11 +79,13 @@ class ActorNetwork(nn.Module):
             in_channels=NUM_FEATURES, out_channels=2, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
-            in_channels=2, out_channels=20, kernel_size=(args.seq_len - 2, 1)
-        )
+            in_channels=2, out_channels=64, kernel_size=(args.seq_len - 2, 1)
+        )  # 64 20
 
-        self.conv3 = nn.Conv2d(in_channels=21, out_channels=1, kernel_size=(1, 1))
-        self.linear = nn.Linear(in_features=NUM_ASSETS, out_features=NUM_FEATURES)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=(1, 1))
+        self.linear = nn.Linear(in_features=NUM_ASSETS, out_features=args.linear2)
+        self.linear2 = nn.Linear(in_features=args.linear2, out_features=NUM_FEATURES)
+
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax()
 
@@ -127,7 +129,8 @@ class ActorNetwork(nn.Module):
         x = self.relu(self.conv2(x)).squeeze(-2).permute(0, 2, 1)
         x = torch.cat((x, action_1), dim=-1).permute(0, 2, 1).unsqueeze(-1)
         action = self.conv3(x).squeeze()
-        # action = self.relu(self.linear(action))
+        action = self.relu(self.linear(action))
+        action = self.relu(self.linear2(action))
         cash_bias = torch.cat(
             (
                 torch.ones(*action.shape[:-1], 1),

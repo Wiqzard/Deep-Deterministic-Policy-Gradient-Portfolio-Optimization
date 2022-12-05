@@ -154,7 +154,7 @@ class Agent(object):
 
         self.critic.zero_grad()
         if self.args.use_amp:
-            critic_scaler.scale(critic_loss).backward()
+            critic_scaler.scale(critic_loss.float()).backward()
             critic_scaler.step(self.critic.optimizer)
             critic_scaler.update()
         else:

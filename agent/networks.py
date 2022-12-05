@@ -134,14 +134,17 @@ class ActorNetwork(nn.Module):
         state_value = state[0].to(self.device)
 
         x = F.relu(self.conv1(state_value))
+        print(x)
         x = F.relu(self.conv2(x))  # .squeeze(-2).permute(0, 2, 1)
+        print(x)
         x = F.max_pool2d(x, (2, 1))
         x = self.conv3(x)
         x = torch.flatten(x, 1)
+        print(x)
         x = F.relu(self.fc1(x))
-
+        print(x)
         action = F.relu(self.fc2(x))
-
+        print(action)
         action = torch.cat((action, action_1), dim=-1)
         action = self.fc3(action).squeeze()
         print(action)

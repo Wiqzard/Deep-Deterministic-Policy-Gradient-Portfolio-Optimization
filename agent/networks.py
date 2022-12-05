@@ -33,7 +33,7 @@ class CriticNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=args.critic_learning_rate)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.to(self.device)
+        self.float().to(self.device)
 
     def forward(self, state, action):
         action_1 = state[1].to(self.device)
@@ -98,7 +98,7 @@ class ActorNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=args.actor_learning_rate)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.to(self.device)
+        self.float().to(self.device)
 
     def create_checkpoint(self, name):
         chkpt_dir = self.args.chkpt_dir

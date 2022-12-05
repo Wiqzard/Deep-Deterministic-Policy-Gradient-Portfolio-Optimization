@@ -9,7 +9,7 @@ from utils.tools import logger, add_periods_to_datetime
 
 args = dotdict()
 args.is_training = True
-args.colab = False
+args.colab = True
 args.linear2 = 64
 args.conv_dim = 64
 args.noise = "OU"
@@ -21,6 +21,12 @@ args.batch_size = 64
 args.gamma = 0.99
 args.tau = 1e-2
 args.max_size = 100000
+
+args.conv1_out = 32  # 32
+args.conv2_out = 32  # 64
+args.conv3_out = 16  # 32
+args.fc1_out = 64  # 128
+
 
 args.critic_learning_rate = 1e-4
 args.actor_learning_rate = 1e-3
@@ -179,3 +185,14 @@ cn = sum(p.numel() for p in critic.parameters() if p.requires_grad)
 
 print(an)
 print(cn)
+
+from agent.agent import Agent
+
+env = Environment(args, flag="train")
+obs, _ = env.reset()
+agent = Agent(args, flag="train")
+for _ in range(0, 10):
+    act = agent.choose_action(obs)
+    print(act)
+    state, r, d = env.step(act)
+    obs = state

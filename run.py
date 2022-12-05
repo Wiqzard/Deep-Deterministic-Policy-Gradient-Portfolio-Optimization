@@ -47,12 +47,10 @@ def main():
     parser.add_argument(
         "--reward_multiplier", type=int, default=1, help="increase reward for learning"
     )
-    parser.add_argument(
-        "--linear2", type=int, default=64, help="layer neurons"
-    )
-    parser.add_argument(
-        "--conv_dim", type=int, default=64, help="layer neurons"
-    )
+    parser.add_argument("--conv1_out", type=int, default=32, help="32 The output size of conv1")
+    parser.add_argument("--conv2_out", type=int, default=32, help=" 64The output size of conv2")
+    parser.add_argument("--conv3_out", type=int, default=16, help="32 The output size of conv3")
+    parser.add_argument("--fc1_out", type=int, default=64, help="64 The output size of fc1")
     parser.add_argument(
         "--use_numeraire",
         type=bool,

@@ -114,7 +114,7 @@ class Exp_Main:
         if resume:
             self.agent.load_models()
 
-        test_steps = self.test_env.num_steps - self.args.seq_len - 1 if with_test else 0
+        test_steps = self.test_env.num_steps - self.args.seq_len if with_test else 0
         self.log_benchmark(in_dollar=True)
         # if self.args.noise == "OU":
         #   self.agent.noise.reset()

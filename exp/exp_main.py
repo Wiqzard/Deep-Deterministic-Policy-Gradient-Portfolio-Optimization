@@ -181,6 +181,8 @@ class Exp_Main:
             new_state, reward, done = env.step(act)
             # print(reward)
             # score += reward
+            if self.args.ba:
+                print(act)
             score_history.append(reward)
             obs = new_state
             if bar:

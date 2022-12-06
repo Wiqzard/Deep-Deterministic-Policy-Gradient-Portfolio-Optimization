@@ -68,8 +68,7 @@ class Agent(object):
                         noise, -1.5 * self.args.sigma, 1.5 * self.args.sigma
                     )
                     mu_prime = F.softmax(mu + noise)  # torch.abs(mu + noise)
-                    print("mu_prim")
-                    print(mu_prime)
+
                     # mu_prime = mu_prime / sum(mu_prime)
                 elif self.args.noise == "param":
                     self.actor_noised.eval()

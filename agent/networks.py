@@ -159,10 +159,8 @@ class ActorNetwork(nn.Module):
         # print("4")
         # print(action)
         action = torch.cat((action, action_1), dim=-1)
-        action = self.fc3(action).squeeze()
+        action = self.fc3(action)
         # print("5")
-        if self.args.bb:
-            print(action)
 
         #        cash_bias = torch.cat(
         #            (
@@ -175,9 +173,11 @@ class ActorNetwork(nn.Module):
         #            action = torch.add(action, cash_bias)
         # print(action)
         if self.args.sigm:
+            action = action.squeeze()
             action = torch.add(F.sigmoid(action), -0.5)
         else:
-            action = self.batch_norm_layer(action)
+            print(action.shape)
+            action = self.batch_norm_layer(action).squeeze()
         return action
 
 

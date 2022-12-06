@@ -179,8 +179,6 @@ class Exp_Main:
         while not done:
             act = self.agent.choose_action(obs, flag="test")
             new_state, reward, done = env.step(act)
-            if self.args.bb:
-                print(act)
             # print(reward)
             # score += reward
             score_history.append(reward)

@@ -177,6 +177,8 @@ class ActorNetwork(nn.Module):
             action = torch.add(F.sigmoid(action), -0.5)
         else:
             action = self.batch_norm_layer(action).squeeze()
+        if self.args.bb:
+            print(action)
         return action
 
 

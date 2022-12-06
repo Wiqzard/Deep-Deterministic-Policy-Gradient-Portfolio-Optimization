@@ -100,6 +100,7 @@ class ActorNetwork(nn.Module):
 
         self.fc2 = nn.Linear(in_features=args.fc1_out, out_features=32)
         self.fc3 = nn.Linear(in_features=40, out_features=8)
+        self.batch_norm_layer = nn.BatchNorm1d(NUM_ASSETS)
 
         self.optimizer = optim.Adam(self.parameters(), lr=args.actor_learning_rate)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -173,7 +174,10 @@ class ActorNetwork(nn.Module):
         #        if self.args.use_numeraire:
         #            action = torch.add(action, cash_bias)
         # print(action)
-        action = F.tanh(action)
+        if self.args.sigm:
+            action = torch.add(F.sigmoid(action), -0.5)
+        else:
+            action = self.batch_norm_layer(action)
         return action
 
 

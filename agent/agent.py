@@ -94,7 +94,7 @@ class Agent(object):
                 else:
                     mu_prime = mu
             else:
-                mu_prime = mu
+                mu_prime = F.softmax(mu)
         self.actor.train()
         return mu_prime.cpu().detach().numpy()
 

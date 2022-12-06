@@ -173,7 +173,7 @@ class ActorNetwork(nn.Module):
         #        if self.args.use_numeraire:
         #            action = torch.add(action, cash_bias)
         # print(action)
-        action = F.softmax(action)
+        action = F.tanh(action)
         return action
 
 

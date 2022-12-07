@@ -42,12 +42,6 @@ class Agent(object):
 
         self.MSE = nn.MSELoss()
 
-    def _create_checkpoint_files(self) -> None:
-        self.actor.create_checkpoint(name="actor")
-        self.target_actor.create_checkpoint(name="target_actor")
-        self.critic.create_checkpoint(name="critic")
-        self.target_critic.create_checkpoint(name="target_critic")
-
     def __add_dim(self, array: np.array) -> torch.Tensor:
         tensor = torch.tensor(array).float().to(self.device)
         return tensor.unsqueeze(0) if len(tensor.shape) in {1, 3} else tensor
@@ -230,14 +224,20 @@ class Agent(object):
                 param.data * self.tau + target_param.data * (1.0 - self.tau)
             )
 
-    def save_models(self):
+    def save_models(self) -> None:
         self.actor.save_checkpoint()
         self.critic.save_checkpoint()
         self.target_actor.save_checkpoint()
         self.target_critic.save_checkpoint()
 
-    def load_models(self):
+    def load_models(self) -> None:
         self.actor.load_checkpoint()
         self.critic.load_checkpoint()
         self.target_actor.load_checkpoint()
         self.target_critic.load_checkpoint()
+
+    def _create_checkpoint_files(self) -> None:
+        self.actor.create_checkpoint(name="actor")
+        self.target_actor.create_checkpoint(name="target_actor")
+        self.critic.create_checkpoint(name="critic")
+        self.target_critic.create_checkpoint(name="target_critic")

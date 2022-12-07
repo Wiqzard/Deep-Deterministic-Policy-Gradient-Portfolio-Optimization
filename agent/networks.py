@@ -56,7 +56,7 @@ class CriticNetwork(nn.Module):
 
         state_action_value = torch.cat((state_value, action), dim=-1)
         state_action_value = self.fc4(state_action_value)
-        print(state_action_value.squeeze())
+        #print(state_action_value.squeeze())
         return state_action_value.squeeze()
 
     def create_checkpoint(self, name):

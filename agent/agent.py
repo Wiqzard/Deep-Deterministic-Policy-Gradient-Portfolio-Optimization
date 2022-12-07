@@ -196,7 +196,7 @@ class Agent(object):
         else:
             mu = self.actor(state)
 
-        actor_loss = -self.critic.forward(state, mu)
+        actor_loss = -self.critic(state, mu)
         actor_loss = torch.mean(actor_loss)
 
         self.actor.zero_grad()

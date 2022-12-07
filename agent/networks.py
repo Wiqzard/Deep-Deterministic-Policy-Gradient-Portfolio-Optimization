@@ -107,6 +107,7 @@ class ActorNetwork(nn.Module):
         self.float().to(self.device)
 
     def create_checkpoint(self, name):
+        self.name = name
         chkpt_dir = self.args.chkpt_dir
         if not os.path.exists(chkpt_dir):
             os.makedirs(chkpt_dir)
@@ -115,11 +116,11 @@ class ActorNetwork(nn.Module):
     def save_checkpoint(self):
         if not self.checkpoint_file:
             raise ValueError("Checkpoint file missing.")
-        print("... saving checkpoint ...")
+        print(f"... saving checkpoint ... {self.name}")
         torch.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        print("... loading checkpoint ...")
+        print(f"... loading checkpoint ... {self.name}")
         self.load_state_dict(torch.load(self.checkpoint_file))
 
     def add_parameter_noise(self, scalar=None):

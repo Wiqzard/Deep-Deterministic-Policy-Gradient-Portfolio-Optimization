@@ -56,7 +56,7 @@ class CriticNetwork(nn.Module):
 
         state_action_value = torch.cat((state_value, action), dim=-1)
         state_action_value = self.fc4(state_action_value)
-        #print(state_action_value.squeeze())
+        # print(state_action_value.squeeze())
         return state_action_value.squeeze()
 
     def create_checkpoint(self, name):
@@ -69,11 +69,11 @@ class CriticNetwork(nn.Module):
     def save_checkpoint(self):
         if not self.checkpoint_file:
             raise ValueError("Checkpoint file missing.")
-        print(f"... saving checkpoint ... {self.name}")
+        # print(f"... saving checkpoint ... {self.name}")
         torch.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        print(f"... loading checkpoint ... {self.name}")
+        # print(f"... loading checkpoint ... {self.name}")
         self.load_state_dict(torch.load(self.checkpoint_file))
 
 
@@ -118,11 +118,11 @@ class ActorNetwork(nn.Module):
     def save_checkpoint(self):
         if not self.checkpoint_file:
             raise ValueError("Checkpoint file missing.")
-        print(f"... saving checkpoint ... {self.name}")
+        # print(f"... saving checkpoint ... {self.name}")
         torch.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        print(f"... loading checkpoint ... {self.name}")
+        #        print(f"... loading checkpoint ... {self.name}")
         self.load_state_dict(torch.load(self.checkpoint_file))
 
     def add_parameter_noise(self, scalar=None):

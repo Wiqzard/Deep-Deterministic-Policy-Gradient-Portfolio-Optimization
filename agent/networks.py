@@ -52,7 +52,7 @@ class CriticNetwork(nn.Module):
         state_value = F.sigmoid(self.fc2(state_value))
 
         state_value = torch.cat((state_value, action_1), dim=-1)
-        state_value = F.sigmoid(self.fc3(state_value))
+        state_value = F.relu(self.fc3(state_value))
 
         state_action_value = torch.cat((state_value, action), dim=-1)
         state_action_value = self.fc4(state_action_value)
@@ -60,6 +60,7 @@ class CriticNetwork(nn.Module):
         return state_action_value.squeeze()
 
     def create_checkpoint(self, name):
+        self.name = name
         chkpt_dir = self.args.chkpt_dir
         if not os.path.exists(chkpt_dir):
             os.makedirs(chkpt_dir)

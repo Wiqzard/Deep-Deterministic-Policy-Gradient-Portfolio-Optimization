@@ -155,9 +155,9 @@ class Agent(object):
 
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
-                target_actions = self.target_actor(new_state)
+                target_actions = self.target_actor(new_state).float()
                 critic_value_ = self.target_critic(new_state, target_actions)
-                critic_value = self.critic(state, action)
+                critic_value = self.critic(state, action).float()
         else:
             target_actions = self.target_actor(new_state)
             critic_value_ = self.target_critic(new_state, target_actions)

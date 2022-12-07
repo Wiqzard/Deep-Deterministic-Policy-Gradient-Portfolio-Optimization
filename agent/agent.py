@@ -195,7 +195,7 @@ class Agent(object):
 
         self.actor.zero_grad()
         if self.args.use_amp:
-            actor_scaler.scaler(actor_loss).backward()
+            actor_scaler.scale(actor_loss).backward()
             actor_scaler.step(self.actor.optimizer)
             actor_scaler.update()
         else:

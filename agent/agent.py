@@ -19,6 +19,7 @@ class Agent(object):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.flag = flag
         self.memory = ReplayBuffer(args)
+        # self.memory2 = ReplayBuffer(args, max_size=10000)
 
         self.critic = CriticNetwork(args)
         self.actor = ActorNetwork(args)
@@ -60,16 +61,15 @@ class Agent(object):
         )
         with torch.no_grad():
             mu = self.actor(oberservation).to(self.device)
+            # print(f"THE FOLLOWING IS FROM CHOOSE ACTION: {mu}")
             if flag == "train":
                 if self.args.noise == "OU":
                     noise = torch.tensor(self.noise()).float().to(self.device)
-
                     noise = torch.clip(
                         noise, -1.5 * self.args.sigma, 1.5 * self.args.sigma
                     )
-                    mu_prime = F.softmax(mu + noise)  # torch.abs(mu + noise)
-
-                    # mu_prime = mu_prime / sum(mu_prime)
+                    mu_prime = F.softmax(mu + noise)
+                    # mu_prime = F.softmax(mu)
                 elif self.args.noise == "param":
                     self.actor_noised.eval()
                     self.actor_noised.load_state_dict(self.actor.state_dict().copy())
@@ -90,15 +90,16 @@ class Agent(object):
                     #    mu_prime = nn.functional.softmax(mu_prime)
                     if random.random() < 0.1:
                         mu_prime = self.random_action().float().to(self.device)
-                else:
-                    mu_prime = mu
             else:
                 mu_prime = F.softmax(mu)
         self.actor.train()
         return mu_prime.cpu().detach().numpy()
 
-    def remember(self, state, action, reward, new_state, done):
-        self.memory.store_transition(state, action, reward, new_state, done)
+    def remember(self, state, action, reward, new_state, done, flag=None):
+        if flag == "bug":
+            self.memory2.store_transition(state, action, reward, new_state, done)
+        else:
+            self.memory.store_transition(state, action, reward, new_state, done)
 
     def random_action(self):
         action = torch.tensor(NUM_ASSETS * [0])
@@ -110,9 +111,30 @@ class Agent(object):
         action = action / sum(action)
         return action
 
+    def fix_const_outputs(self):
+        """A function with no meaning, that fixes the biggest bug in history"""
+        # if self.memory2.mem_cntr < 2:  # self.args.batch_size:
+        #    return
+        # print("------------------------- bullshit ---------------------------")
+        # state, _, _, _, _ = self.memory.sample_buffer(2)
+        # state = (
+        #    torch.tensor(state[0]).float().to(self.critic.device),
+        #    torch.tensor(state[1]).float().to(self.critic.device),
+        # )
+        state = (
+            torch.rand((2, NUM_FEATURES, self.args.seq_len, NUM_ASSETS)).to(
+                self.device
+            ),
+            torch.rand((2, NUM_ASSETS)).to(self.device),
+        )
+
+        with torch.no_grad():
+            mu = self.actor(state)
+
     def learn(self):
         if self.memory.mem_cntr < self.args.batch_size:
             return
+        print("------------------------- learn ---------------------------")
         state, action, reward, new_state, done = self.memory.sample_buffer(
             self.args.batch_size
         )
@@ -136,15 +158,16 @@ class Agent(object):
             actor_scaler = torch.cuda.amp.GradScaler()
 
         # <---------------------------- update critic ----------------------------> #
+
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
-                target_actions = self.target_actor.forward(new_state)
-                critic_value_ = self.target_critic.forward(new_state, target_actions)
-                critic_value = self.critic.forward(state, action)
+                target_actions = self.target_actor(new_state)
+                critic_value_ = self.target_critic(new_state, target_actions)
+                critic_value = self.critic(state, action)
         else:
-            target_actions = self.target_actor.forward(new_state)
-            critic_value_ = self.target_critic.forward(new_state, target_actions)
-            critic_value = self.critic.forward(state, action)
+            target_actions = self.target_actor(new_state)
+            critic_value_ = self.target_critic(new_state, target_actions)
+            critic_value = self.critic(state, action)
 
         target = [
             reward[j] + self.args.gamma * critic_value_[j] * (1 - done[j])
@@ -156,6 +179,7 @@ class Agent(object):
         critic_loss = self.MSE(target, critic_value)
 
         self.critic.zero_grad()
+
         if self.args.use_amp:
             critic_scaler.scale(critic_loss.float()).backward()
             critic_scaler.step(self.critic.optimizer)
@@ -168,13 +192,12 @@ class Agent(object):
 
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
-                mu = self.actor.forward(state)
+                mu = self.actor(state)
         else:
-            mu = self.actor.forward(state)
+            mu = self.actor(state)
 
         actor_loss = -self.critic.forward(state, mu)
         actor_loss = torch.mean(actor_loss)
-        # print(actor_loss)
 
         self.actor.zero_grad()
         if self.args.use_amp:
@@ -186,6 +209,7 @@ class Agent(object):
             self.actor.optimizer.step()
 
         self.update_network_parameters()
+
         with open("log_loss.txt", "a+") as f:
             f.write(f"Actor loss: {actor_loss.item()}\n")
             f.write(f"Critic loss: {critic_loss.item()}\n")

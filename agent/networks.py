@@ -140,28 +140,16 @@ class ActorNetwork(nn.Module):
         state_value = state[0].to(self.device)
 
         x = F.relu(self.conv1(state_value))
-        # print("1")
-        # print(x)
-        x = F.relu(self.conv2(x))  # .squeeze(-2).permute(0, 2, 1)
-        # print("2")
-        # print(x)
+        x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, (2, 1))
         x = self.conv3(x)
         x = torch.flatten(x, 1)
-        # print("2")
-        # print(x)
         x = self.layer_norm(x)
-        # print(x)
         x = F.relu(self.fc1(x))
-        # print("3")
-        # print(x)
+
         action = F.sigmoid(self.fc2(x))
-        # print("4")
-        # print(action)
         action = torch.cat((action, action_1), dim=-1)
         action = self.fc3(action)
-        # print("5")
-
         #        cash_bias = torch.cat(
         #            (
         #                torch.ones(*action.shape[:-1], 1),
@@ -171,14 +159,17 @@ class ActorNetwork(nn.Module):
         #        ).to(self.device)
         #        if self.args.use_numeraire:
         #            action = torch.add(action, cash_bias)
-        # print(action)
         if self.args.sigm:
             action = action.squeeze()
             action = torch.add(F.sigmoid(action), -0.5)
         else:
             action = self.batch_norm_layer(action).squeeze()
         if self.args.bb:
+            print("nn")
             print(action)
+        if self.args.ab:
+            if action.shape[0] < 5:
+                print(action)
         return action
 
 

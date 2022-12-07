@@ -6,7 +6,8 @@ from portfolio_manager.algorithms import *
 from environment.environment import Environment
 from agent.agent import Agent
 from utils.constants import *
-
+import torch.nn.functional as F
+import torch
 from utils.tools import train_test_split, add_periods_to_datetime, calculate_returns
 from data_management.data_manager import PriceHistory
 
@@ -149,13 +150,17 @@ class Exp_Main:
             ) as pbar:
                 while not done:
                     act = self.agent.choose_action(obs)
+
                     new_state, reward, done = self.train_env.step(act)
                     train_scores.append(reward)
                     self.agent.remember(obs, act, reward, new_state, int(done))
+                    print(50 * "-")
                     self.agent.learn()
+                    print(50 * "-")
                     obs = new_state
                     pbar.update(1)
 
+                self.agent.save_models()
                 test_scores = self.backtest(bar=pbar) if with_test else None
 
             self.log_episode_result(
@@ -166,25 +171,35 @@ class Exp_Main:
             self.test_scores_episodes.append(test_scores)
             self.train_action_histories.append(self.train_env.action_history)
 
-            if episode % 5 == 0 and episode != 0:
-                self.agent.save_models()
+            #            if episode % 1 == 0 and episode != 0:
+            #                self.agent.save_models()
             self.save_results()
             # print(self.train_env.reward_history)
 
     def backtest(self, bar=None, env=None) -> None:
+        self.agent.load_models()
+
         score_history = []
         done = False
         env = env or self.test_env
         obs, _ = env.reset()
+        # self.agent.memory2.mem_cntr = 5
         while not done:
             act = self.agent.choose_action(obs, flag="test")
+
+            # self.agent.actor.eval()
+            # act = F.softmax(self.agent.actor.forward(obs)).cpu().detach().numpy()
             new_state, reward, done = env.step(act)
+
+            # self.agent.remember(obs, act, reward, new_state, int(done), flag="bug")
+            # print(50 * "-")
+            self.agent.fix_const_outputs()
+            obs = new_state
             # print(reward)
             # score += reward
             if self.args.ba:
                 print(act)
             score_history.append(reward)
-            obs = new_state
             if bar:
                 bar.update(1)
 

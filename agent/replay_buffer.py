@@ -1,6 +1,8 @@
 import numpy as np
 
 from utils.constants import *
+
+
 class ReplayBuffer(object):
     """
     n_actions = num_assets
@@ -8,13 +10,15 @@ class ReplayBuffer(object):
                     -> saves into 2d array (not efficient)
 
     """
-    def __init__(self, args):
+
+    def __init__(self, args, max_size=None):
         self.args = args
-        self.mem_size = args.max_size
-        self.n_actions = NUM_ASSETS 
-        self.num_features = NUM_FEATURES 
+        self.mem_size = max_size or args.max_size
+
+        self.n_actions = NUM_ASSETS
+        self.num_features = NUM_FEATURES
         self.seq_len = args.seq_len
-        
+
         self.mem_cntr = 0
         self.state_memory = (
             np.zeros((self.mem_size, self.num_features, self.seq_len, self.n_actions)),

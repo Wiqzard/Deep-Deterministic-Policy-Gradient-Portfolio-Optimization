@@ -13,7 +13,7 @@ args.colab = True
 args.linear2 = 64
 args.conv_dim = 64
 args.noise = "OU"
-args.sigma = 0.25
+args.sigma = 0  # 0.25
 args.theta = 0.25
 args.dt = 0.002
 args.x0 = None
@@ -30,17 +30,17 @@ args.fc1_out = 64  # 128
 
 args.critic_learning_rate = 1e-4
 args.actor_learning_rate = 1e-3
-args.chkpt_dir = "contents/outputs/ddpg"
+args.chkpt_dir = "outputs/ddpg"
 
 args.episodes = 500
 args.ratio = 0.8
 args.benchmark_name = "UBAH"
 args.compute_before = False
 args.seq_len = 50
-
+args.reward_multiplier = 1
 args.database_path = "outputs/coin_history.db"
 args.granularity = 900
-args.start_date = "2022-09-01-00-00"
+args.start_date = "2022-10-09-00-00"
 args.end_date = "2022-10-20-00-00"
 
 args.commission_rate_selling = 0.00
@@ -75,38 +75,53 @@ from environment.environment import Environment
 
 from fed_former.data_factory import DataSet
 
-data = DataSet(args, "train")
-print(data.scaled_close_prices)
-x = torch.tensor(data.scaled_close_prices.astype(np.float)).float().unsqueeze(0)
-# torch.Size([1, 4441])
-x_mark = torch.tensor(data.data_stamp).float().unsqueeze(0)
-# torch.Size([1, 4441, 5])
-inp = embed(x, x_mark)
-print(inp)
-print(inp.shape)
-# torch.Size([1, 4441, 512])
-an = sum(p.numel() for p in embed.parameters() if p.requires_grad)
-print(an)
+from exp.exp_main import Exp_Main
 
-
-import torch.nn as nn
-import torch.functional as F
-import torch.optim as optim
-args.d_model = 512
-args.hidden_size = 256
-args.num_layers = 4
-args.fc1_out = 128
-args.fc2_out = 32
-args.fc3_out = 16
-
-from fed_former.lstm import ActorLSTM, CriticLSTM
-actor = ActorLSTM(args)
-critic = CriticLSTM(args)
-
-hid = torch.randn((1, 50, 16))
-lstm = LSTM(16, 4)
-out, hidden = lstm(inp[:, :50, :], hid)
-print(out)
+exp = Exp_Main(args)
+# exp.agent.critic.load_checkpoint()
+# exp.agent.actor.load_checkpoint()
+# exp.train(resume=False)
+exp.backtest()  #
+# obs, _ = env = exp.train_env.reset()
+# act = exp.agent.choose_action(obs)
+# print(act)
+# new_state, reward, done = exp.train_env.step(act)
+# act2 = exp.agent.choose_action(new_state)
+# print(act2)
+# print(exp.test_env.state_history)
+# print(exp.test_env.action_history)
+# data = DataSet(args, "train")
+# print(data.scaled_close_prices)
+# x = torch.tensor(data.scaled_close_prices.astype(np.float)).float().unsqueeze(0)
+## torch.Size([1, 4441])
+# x_mark = torch.tensor(data.data_stamp).float().unsqueeze(0)
+## torch.Size([1, 4441, 5])
+# inp = embed(x, x_mark)
+# print(inp)
+# print(inp.shape)
+## torch.Size([1, 4441, 512])
+# an = sum(p.numel() for p in embed.parameters() if p.requires_grad)
+# print(an)
+#
+#
+# import torch.nn as nn
+# import torch.functional as F
+# import torch.optim as optim
+# args.d_model = 512
+# args.hidden_size = 256
+# args.num_layers = 4
+# args.fc1_out = 128
+# args.fc2_out = 32
+# args.fc3_out = 16
+#
+# from fed_former.lstm import ActorLSTM, CriticLSTM
+# actor = ActorLSTM(args)
+# critic = CriticLSTM(args)
+#
+# hid = torch.randn((1, 50, 16))
+# lstm = LSTM(16, 4)
+# out, hidden = lstm(inp[:, :50, :], hid)
+# print(out)
 # def test_steps():
 #    prices = PriceHistory(
 #        args,

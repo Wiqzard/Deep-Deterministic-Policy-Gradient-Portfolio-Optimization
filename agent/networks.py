@@ -83,7 +83,7 @@ class ActorNetwork(nn.Module):
         super(ActorNetwork, self).__init__()
         self.args = args
         self.conv1 = nn.Conv2d(
-            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(5, 1)
+            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(3, 1)
         )
         self.conv2 = nn.Conv2d(
             in_channels=args.conv1_out,

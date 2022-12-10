@@ -183,11 +183,14 @@ class ActorNetwork(nn.Module):
         #    print(action)
         if self.args.ab:
             if action.shape[0] == 8:
+                print(action.shape)
                 print(action)
                 print(action / torch.norm(action, p=2, dim=1, keepdim=True))
                 print(F.softmax(action))
-                print(F.softmax(action / torch.norm(action, p=2, dim=1, keepdim=True)))
-        action = F.softmax(action / torch.norm(action, p=2, dim=1, keepdim=True), dim=1)
+                print(F.softmax(action / torch.norm(action, p=2, dim=-1, keepdim=True)))
+        action = F.softmax(
+            action / torch.norm(action, p=2, dim=1, keepdim=True), dim=-1
+        )
         return action
 
 

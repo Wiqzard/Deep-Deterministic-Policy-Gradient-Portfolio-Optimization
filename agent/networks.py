@@ -181,8 +181,8 @@ class ActorNetwork(nn.Module):
         if self.args.ab:
             if action.shape[0] == 8:
                 print(action)
-                print(F.softmax(action))
-        action = F.softmax(action)
+                print(F.softmax(action / sum(torch.abs(action))))
+        action = F.softmax(action / sum(torch.abs(action)))
         return action
 
 

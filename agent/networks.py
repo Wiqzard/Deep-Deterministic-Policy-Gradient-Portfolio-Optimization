@@ -49,7 +49,7 @@ class CriticNetwork(nn.Module):
         state_value = torch.flatten(state_value, 1)
         state_value = self.layer_norm(state_value)
         state_value = F.relu(self.fc1(state_value))
-        state_value = F.sigmoid(self.fc2(state_value))
+        state_value = F.relu(self.fc2(state_value))
 
         state_value = torch.cat((state_value, action_1), dim=-1)
         state_value = F.relu(self.fc3(state_value))
@@ -83,7 +83,7 @@ class ActorNetwork(nn.Module):
         super(ActorNetwork, self).__init__()
         self.args = args
         self.conv1 = nn.Conv2d(
-            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(3, 1)
+            in_channels=NUM_FEATURES, out_channels=args.conv1_out, kernel_size=(5, 1)
         )
         self.conv2 = nn.Conv2d(
             in_channels=args.conv1_out,
@@ -141,29 +141,24 @@ class ActorNetwork(nn.Module):
         """
         action_1 = state[1].to(self.device)
         state_value = state[0].to(self.device)
-        print("state")
-        print(state_value)
         x = F.relu(self.conv1(state_value))
-        print("x1")
-        print(x)
-        print(x.shape)
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, (2, 1))
-        print("x2")
-        print(x)
+        #print("x2")
+        #print(x)
         x = self.conv3(x)
         x = torch.flatten(x, 1)
-        print("x3")
-        print(x)
+        #print("x3")
+        #jprint(x)
         x = F.relu(self.fc1(x))
 
-        print("x4")
-        print(x)
-        action = F.sigmoid(self.fc2(x))
-        print(action)
+        #print("x4")
+        #print(x)
+        action = F.relu(self.fc2(x))
+        #print(action)
         action = torch.cat((action, action_1), dim=-1)
         action = self.fc3(action)
-        print(action)
+        #print(action)
         #        cash_bias = torch.cat(
         #            (
         #                torch.ones(*action.shape[:-1], 1),
@@ -173,16 +168,16 @@ class ActorNetwork(nn.Module):
         #        ).to(self.device)
         #        if self.args.use_numeraire:
         #            action = torch.add(action, cash_bias)
-        if self.args.sigm:
-            action = action.squeeze()
-            action = torch.add(F.sigmoid(action), -0.5)
-        else:
-            action = self.batch_norm_layer(action).squeeze()
-        print("al")
-        print(action)
-        if self.args.bb:
-            print("nn")
-            print(action)
+        # if self.args.sigm:
+        #    action = action.squeeze()
+        #    action = torch.add(F.sigmoid(action), -0.5)
+        # else:
+        #    action = self.batch_norm_layer(action).squeeze()
+        # print("al")
+        # print(action)
+        # if self.args.bb:
+        #    print("nn")
+        #    print(action)
         if self.args.ab:
             if action.shape[0] == 8:
                 print(action)

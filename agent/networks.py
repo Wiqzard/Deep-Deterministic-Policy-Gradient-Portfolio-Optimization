@@ -160,7 +160,7 @@ class ActorNetwork(nn.Module):
         action = F.relu(self.fc2(x))
         # print(action)
         action = torch.cat((action, action_1), dim=-1)
-        action = self.fc3(action).squeeze()
+        action = self.relu(self.fc3(action)).squeeze()
         # print(action)
         #        cash_bias = torch.cat(
         #            (

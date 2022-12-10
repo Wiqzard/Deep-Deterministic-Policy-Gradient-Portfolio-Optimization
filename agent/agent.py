@@ -172,8 +172,6 @@ class Agent(object):
 
         critic_loss = self.MSE(target, critic_value)
 
-        self.critic.zero_grad()
-
         if self.args.use_amp:
             critic_scaler.scale(critic_loss).backward()
             critic_scaler.step(self.critic.optimizer)
@@ -182,6 +180,7 @@ class Agent(object):
             critic_loss.backward()
             self.critic.optimizer.step()
 
+        self.critic.zero_grad()
         # <---------------------------- update actor ----------------------------> #
 
         if self.args.use_amp:
@@ -193,15 +192,16 @@ class Agent(object):
         actor_loss = -self.critic(state, mu)
         actor_loss = torch.mean(actor_loss)
 
-        self.actor.zero_grad()
         if self.args.use_amp:
             actor_scaler.scale(actor_loss).backward()
             actor_scaler.step(self.actor.optimizer)
             actor_scaler.update()
         else:
+            print("back")
             actor_loss.backward()
             self.actor.optimizer.step()
 
+        self.actor.zero_grad()
         self.update_network_parameters()
 
         with open("log_loss.txt", "a+") as f:

@@ -170,6 +170,7 @@ class ActorNetwork(nn.Module):
         if self.args.bb:
             print("nn")
             print(action)
+            print(action.shape)
         if self.args.ab:
             if action.shape[0] < 5:
                 print(action)

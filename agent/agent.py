@@ -60,7 +60,7 @@ class Agent(object):
                 if self.args.noise == "OU":
                     noise = torch.tensor(self.noise()).float().to(self.device)
                     max_value = max(mu)
-                    noise = torch.clip(noise, -max_value, max_value)
+                    noise = torch.clip(noise, -max_value * 0.9, max_value * 0.9)
                     mu_prime = mu + noise
                     # mu_prime = F.softmax(mu + noise)
                     mu_prime = torch.abs(mu_prime) / torch.norm(

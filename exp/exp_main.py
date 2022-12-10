@@ -153,7 +153,7 @@ class Exp_Main:
 
                     new_state, reward, done = self.train_env.step(act)
                     train_scores.append(reward)
-                    # self.agent.remember(obs, act, reward, new_state, int(done))
+                    self.agent.remember(obs, act, reward, new_state, int(done))
                     # print(50 * "-")
                     self.agent.learn()
                     # print(50 * "-")

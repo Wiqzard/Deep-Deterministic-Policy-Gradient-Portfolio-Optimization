@@ -84,6 +84,8 @@ class Agent(object):
                     #    mu_prime = nn.functional.softmax(mu_prime)
                     if random.random() < 0.1:
                         mu_prime = self.random_action().float().to(self.device)
+                else:
+                    mu_prime = mu
             else:
                 mu_prime = F.softmax(mu)
         self.actor.train()

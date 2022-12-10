@@ -141,10 +141,12 @@ class ActorNetwork(nn.Module):
         """
         action_1 = state[1].to(self.device)
         state_value = state[0].to(self.device)
-
+        print("state")
+        print(state_value)
         x = F.relu(self.conv1(state_value))
         print("x1")
         print(x)
+        print(x.shape)
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, (2, 1))
         print("x2")

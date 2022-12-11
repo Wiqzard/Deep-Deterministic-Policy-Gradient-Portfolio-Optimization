@@ -63,6 +63,7 @@ class Exp_Fed(Exp_Basic):
         args = self.args
         if resume:
             self.actor.load_checkpoint()
+        self.log_benchmark(in_dollar=True)
 
         dataloader = self.get_dataloader("train")
         optimizer = self.get_optimizer()
@@ -94,6 +95,7 @@ class Exp_Fed(Exp_Basic):
                         scales, states, prev_actions, actions, self.args
                     )
                     reward = -self.calculate_cummulative_reward(rewards)
+                    gradient_graph = reward.get_graph()
                     print("rewward")
                     print(reward)
                     if self.args.use_amp:
@@ -115,7 +117,7 @@ class Exp_Fed(Exp_Basic):
                 # print(self.train_data.action_memory)
                 self.actor.save_checkpoint()
                 test_scores = self.backtest(bar=pbar) if with_test else None
-
+                return gradient_graph
             self.log_episode_result(
                 episode=episode, train_scores=train_scores, test_scores=test_scores
             )

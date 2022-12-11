@@ -193,7 +193,7 @@ class PortfolioManager:
         self.r[self.r < 0] = 0.0
 
         # add risk-free asset
-        self.r -= B.sum(axis=1) - 1  # * self.rf_rate / self.freq()
+        # self.r -= B.sum(axis=1) - 1  # * self.rf_rate / self.freq()
         # add fees
         self.fees = self.to_rebalance(B, X).abs() * self.fee
         self.asset_r -= self.fees
@@ -218,6 +218,7 @@ class PortfolioManager:
         # subtract risk-free rate
         # r = _sub_rf(r, rf)
         # freq return and sd
+        r /= 4 * 24
         if w is None:
             mu = r.mean()
             sd = r.std()
@@ -226,17 +227,18 @@ class PortfolioManager:
             sd = np.sqrt(
                 np.maximum(0, (r**2 * w).sum() / w.sum() - mu**2)
             )  # w_std(r, w)
-        mu = mu * freq
-        sd = sd * np.sqrt(freq)
-        sh = mu / (sd + alpha) ** sd_factor
+        mu = mu  # * freq
+        sd = sd  # * np.sqrt(freq)
+        sharpe_ratio = mu / (sd + alpha) ** sd_factor
+        ann_sharpe_ratio = sharpe_ratio * np.sqrt(252)
         # if isinstance(sh, float):
         #    if sh == np.inf:
         #        return np.inf * np.sign(mu - rf ** (1.0 / freq))
         # else:
         #    pass
         # sh[sh == np.inf] *= np.sign(mu - rf**(1./freq))
-        self._sharpe = sh
-        return sh
+        self._sharpe = sharpe_ratio
+        return sharpe_ratio
 
     def to_rebalance(self, B, X):
         """

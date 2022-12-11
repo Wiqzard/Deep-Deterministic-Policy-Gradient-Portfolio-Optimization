@@ -89,13 +89,13 @@ class Exp_Fed(Exp_Basic):
                             actions = self.actor(states, state_time_marks, prev_actions)
                     else:
                         actions = self.actor(states, state_time_marks, prev_actions)
-                    action_history.append(actions.detach().cpu().numpy())
 
                     rewards = calculate_rewards_torch(
                         scales, states, prev_actions, actions, self.args
                     )
                     reward = calculate_cummulative_reward(rewards)
 
+                    action_history.append(actions.detach().cpu().numpy())
                     self.train_data.action_memory.store_action(
                         actions.detach().numpy(), idxs
                     )
@@ -109,7 +109,7 @@ class Exp_Fed(Exp_Basic):
                         optimizer.step()
                     optimizer.zero_grad()
                     pbar.update(args.batch_size)
-
+                print(self.train_data.action_memory)
                 self.actor.save_checkpoint()
                 test_scores = self.backtest(bar=pbar) if with_test else None
 

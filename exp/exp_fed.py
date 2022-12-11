@@ -97,7 +97,7 @@ class Exp_Fed(Exp_Basic):
 
                     action_history.append(actions.detach().cpu().numpy())
                     self.train_data.action_memory.store_action(
-                        actions.detach().numpy(), idxs
+                        actions.detach().cpu().numpy(), idxs
                     )
 
                     if self.args.use_amp:

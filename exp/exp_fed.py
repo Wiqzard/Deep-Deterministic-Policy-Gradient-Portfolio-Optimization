@@ -97,7 +97,9 @@ class Exp_Fed(Exp_Basic):
                             scales, states, prev_actions, actions, self.args
                         )
                         reward = -self.calculate_cummulative_reward(rewards)
-                        grads = torch.autograd.grad(reward, self.actor.parameters())
+                        grads = torch.autograd.grad(
+                            reward, self.actor.parameters(), allow_unused=True
+                        )
                     torch.autograd.profiler.save_nvtx("gradient_graph.nvtx")
                     print("rewward")
                     print(reward)
@@ -120,7 +122,7 @@ class Exp_Fed(Exp_Basic):
                 # print(self.train_data.action_memory)
                 self.actor.save_checkpoint()
                 test_scores = self.backtest(bar=pbar) if with_test else None
-                return gradient_graph
+
             self.log_episode_result(
                 episode=episode, train_scores=train_scores, test_scores=test_scores
             )
@@ -167,6 +169,12 @@ class Exp_Fed(Exp_Basic):
 
         self.test_action_histories.append(action_history)
         return score_history
+
+    def reward(self, model_output):
+        reward = self.calculate_cummulative_reward(
+            self.calculate_rewards_torch(model_output)
+        )
+        return reward
 
     def calculate_rewards_torch(self, scales, states, prev_actions, actions, args):
         """

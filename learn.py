@@ -111,7 +111,15 @@ import torch.optim as optim
 embedding = DataEmbedding(c_in=8, d_model=args.d_model, embed_type="timef", freq="t")
 actor = ActorLSTM(args, embedding)
 
-optimizer = optim.Adam(actor.parameters(), lr=args.actor_learning_rate)
+# optimizer = optim.Adam(actor.parameters(), lr=args.actor_learning_rate)
+optimizer = optim.SGD(actor.parameters(), lr=0.1)
+import time
+
+criterion = torch.nn.MSELoss()
+
+pytorch_total_params = sum(p.numel() for p in actor.parameters() if p.requires_grad)
+print("000000000")
+print(pytorch_total_params)
 
 
 def train2():
@@ -119,18 +127,26 @@ def train2():
         for idxs, scales, states, prev_actions, next_states in tqdm(
             data_loader, total=len(data_loader), leave=True
         ):
+            actor.zero_grad()
             states, _, state_time_marks, _ = states
             actions = actor(states, state_time_marks, prev_actions)
+            print(actions)
             rewards = calculate_rewards_torch(
                 scales, states, prev_actions, actions, args
             )
-            data.action_memory.store_action(actions.detach().numpy(), idxs)
+            # data.action_memory.store_action(actions.detach().numpy(), idxs)
             # reward = sum(rewards)
-            reward = calculate_cummulative_reward(rewards)
+            #            reward = calculate_cummulative_reward(rewards)
+            reward = criterion(actions, torch.zeros_like(actions))
+            start = time.time()
             reward.backward()
+            print(80 * "-")
+            print(actor.lstm._all_weights.grad.shape)
             print(reward)
             optimizer.step()
             optimizer.zero_grad()
+            end = time.time()
+            print("time", end - start)
 
 
 # train()

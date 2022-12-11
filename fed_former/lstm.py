@@ -64,9 +64,12 @@ class ActorLSTM(nn.Module):
         # if not hidden:
         #   hidden = self.init_hidden(time_mark.shape[-1])
         embed = self.embedding(state_value, time_mark)
+        # print("embed", embed)
         output, (hidden_state, cell_state) = self.lstm(embed)  # , hidden)
         hidden_state = hidden_state.permute(1, 0, 2).squeeze(1)
+        # jprint(hidden_state)
         action = F.relu(self.fc1(hidden_state))
+        # print(7, action)
         action = torch.flatten(action, start_dim=1, end_dim=-1)
         if self.args.dropout_linear:
             action = self.drop_layer(self.fc2(action))
@@ -74,8 +77,11 @@ class ActorLSTM(nn.Module):
         else:
             action = F.relu(self.fc2(action))
         action = torch.cat((action, action_w_1), dim=-1)
+        # print(4, action)
         action = self.fc3(action).squeeze()
+        # print(3, action)
         action = action / torch.norm(action, p=2, dim=-1, keepdim=True)
+        # print(2, action)
         if self.args.bb:
             print(action)
         action = F.softmax(action, dim=-1)

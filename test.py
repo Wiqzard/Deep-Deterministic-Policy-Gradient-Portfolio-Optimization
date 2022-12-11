@@ -15,7 +15,7 @@ args.seq_len = 50
 
 args.database_path = "outputs/coin_history.db"
 args.granularity = 900
-args.start_date = "2022--01-00-00"
+args.start_date = "2022-10-01-00-00"
 args.end_date = "2022-10-20-00-00"
 args.commission_rate_selling = 0.0025
 args.commission_rate_purchasing = 0.0025

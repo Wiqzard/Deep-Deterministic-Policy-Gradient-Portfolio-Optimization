@@ -94,7 +94,6 @@ class Exp_Fed(Exp_Basic):
                     rewards = self.calculate_rewards_torch(
                         scales, states, prev_actions, actions, self.args
                     )
-                    print(rewards)
                     reward = -sum(
                         rewards
                     )  # -self.calculate_cummulative_reward(rewards)

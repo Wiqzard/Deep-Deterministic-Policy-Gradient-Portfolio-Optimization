@@ -50,9 +50,46 @@ args.use_amp = False
 args.use_gpu = bool(torch.cuda.is_available() and args.use_gpu)
 
 
-args.d_model = 512
+args.d_model = 2048  # 512
 args.hidden_size = 256
 args.num_layers = 1
-args.fc1_out = 32
+args.fc1_out = 1024  # 32
 args.fc2_out = 32
 args.fc3_out = 16
+args.colab = False
+args.bb = True
+args.ba = True
+args.ab = True
+
+args.episodes = 500
+args.ratio = 0.8
+args.benchmark_name = "UBAH"
+args.compute_before = False
+args.seq_len = 50
+
+args.database_path = "outputs/coin_history.db"
+args.granularity = 900
+args.start_date = "2022-10-01-00-00"
+args.end_date = "2022-10-20-00-00"
+args.commission_rate_selling = 0.0025
+args.commission_rate_purchasing = 0.0025
+
+# args.chkpt_dir = "contents/outputs/dpg"
+args.chkpt_dir = "outputs/dpg"
+args.d_model = 64
+args.embed_type = "timef"
+args.hidden_size = 64
+args.num_layers = 1
+args.fc1_out = 16
+args.fc2_out = 16
+args.dropout = 0.1
+
+args.optim = "adam"
+args.actor_learning_rate = 1e-3
+
+args.batch_size = 3
+args.shuffle = False
+args.drop_last = False
+
+args.use_gpu = False
+args.use_amp = False

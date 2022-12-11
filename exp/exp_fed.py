@@ -85,22 +85,17 @@ class Exp_Fed(Exp_Basic):
             ) as pbar:
                 for idxs, scales, states, prev_actions, _ in dataloader:
                     states, _, state_time_marks, _ = states
-                    with torch.autograd.profiler.emit_nvtx():
-                        if self.args.use_amp:
-                            with torch.cuda.amp.autocast():
-                                actions = self.actor(
-                                    states, state_time_marks, prev_actions
-                                )
-                        else:
+                    if self.args.use_amp:
+                        with torch.cuda.amp.autocast():
                             actions = self.actor(states, state_time_marks, prev_actions)
-                        rewards = self.calculate_rewards_torch(
-                            scales, states, prev_actions, actions, self.args
-                        )
-                        reward = -self.calculate_cummulative_reward(rewards)
-                        grads = torch.autograd.grad(
-                            reward, self.actor.parameters(), allow_unused=True
-                        )
-                    torch.autograd.profiler.save_nvtx("gradient_graph.nvtx")
+                    else:
+                        actions = self.actor(states, state_time_marks, prev_actions)
+                    rewards = self.calculate_rewards_torch(
+                        scales, states, prev_actions, actions, self.args
+                    )
+                    print(rewards)
+                    reward = -self.calculate_cummulative_reward(rewards)
+
                     print("rewward")
                     print(reward)
                     if self.args.use_amp:
@@ -170,11 +165,11 @@ class Exp_Fed(Exp_Basic):
         self.test_action_histories.append(action_history)
         return score_history
 
-    def reward(self, model_output):
-        reward = self.calculate_cummulative_reward(
-            self.calculate_rewards_torch(model_output)
-        )
-        return reward
+    #    def reward(self, model_output):
+    # reward = self.calculate_cummulative_reward(
+    # self.calculate_rewards_torch(model_output)
+    # )
+    # return reward
 
     def calculate_rewards_torch(self, scales, states, prev_actions, actions, args):
         """
@@ -197,7 +192,7 @@ class Exp_Fed(Exp_Basic):
             w_t_1 = prev_actions[batch].float().to(self.device)
             if args.use_numeraire:
                 y_t = X_t[args.seq_len, 1:] / X_t[args.seq_len - 1, 1:]
-                y_t = torch.cat((np.ones((1)), y_t))
+                y_t = torch.cat((torch.ones((1)), y_t))
             else:
                 y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
             w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
@@ -211,7 +206,7 @@ class Exp_Fed(Exp_Basic):
     def calculate_cummulative_reward(self, rewards):
         cumm_reward = [element / (i + 1) for i, element in enumerate(rewards)]
 
-        return sum(cumm_reward)
+        return torch.sum(cumm_reward)
 
     def log_benchmark(self, in_dollar: bool = True) -> None:
         """Logs the benchmark of the train and test datasat. Specific algorithm is specified under args.bechmark_name"""

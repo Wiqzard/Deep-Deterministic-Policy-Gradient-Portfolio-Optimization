@@ -101,8 +101,8 @@ class Exp_Fed(Exp_Basic):
 
                     print("rewward")
                     print(reward)
-                    start = time.time()
 
+                    start = time.time()
                     if self.args.use_amp:
                         scaler.scale(reward).backward()
                         scaler.step(optimizer)
@@ -113,14 +113,14 @@ class Exp_Fed(Exp_Basic):
                     optimizer.zero_grad()
                     end = time.time()
                     print("backward took %.6f seconds" % (end - start))
+
                     action_history.append(actions.detach().cpu().numpy())
                     self.train_data.action_memory.store_action(
                         actions.detach().cpu().numpy(), idxs
                     )
-
                     train_scores.append(reward.detach().cpu().numpy())
                     pbar.update(args.batch_size)
-                # print(self.train_data.action_memory)
+
                 self.actor.save_checkpoint()
                 test_scores = self.backtest(bar=pbar) if with_test else None
 
@@ -189,23 +189,26 @@ class Exp_Fed(Exp_Basic):
         seq_x_s = states
         mus, sigmas = scales
         rewards = []
+        print("begin reward")
         for batch in range(seq_x_s.shape[0]):
             mu = mus[batch]
             sigma = sigmas[batch]
             X_t = seq_x_s[batch]
             X_t = np.multiply(X_t, sigma) + mu
             X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
+            print("X_t:", X_t)
             w_t_1 = prev_actions[batch].float().to(self.device)
-            if args.use_numeraire:
-                y_t = X_t[args.seq_len, 1:] / X_t[args.seq_len - 1, 1:]
-                y_t = torch.cat((torch.ones((1)), y_t))
-            else:
-                y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
+            print("w_t_1:", w_t_1)
+            y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
+            print("y_t:", y_t)
             w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
+            print("w_t_prime:", w_t_prime)
             mu_t = 1 - args.commission_rate_selling * sum(
                 torch.abs(w_t_prime - actions[batch])
             )
+            print("mu_t:", mu_t)
             r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
+            print("r_t:", r_t)
             rewards.append(r_t)
         return rewards
 

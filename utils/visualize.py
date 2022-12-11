@@ -55,10 +55,11 @@ def plot_portfolio_algos(args, flag="train", commission=None):
         return_ = round(np.prod(returns), 4)
         algo.plot_portfolio_value(r=returns)
         sharpe = algo.sharpe(returns)
+        sharpe = round(sharpe * 100, 2)
         # plt.set_label(modelk)
         # plt.label
         print(
-            f" {algo.name} Total Return: {return_} Sharpe Ratio(d): {round(sharpe, 2)} "
+            f" {algo.name} Total Return: {return_} Sharpe Ratio(d): {sharpe}% "
         )
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.xlabel(f"Periods [{int(ubah.state_space.granularity / 60)} min]")

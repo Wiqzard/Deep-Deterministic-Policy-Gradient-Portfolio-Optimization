@@ -203,7 +203,7 @@ class Exp_Fed(Exp_Basic):
             )
             r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
             rewards.append(r_t)
-        return rewards
+        return torch.tensor(rewards)
 
     def calculate_cummulative_reward(self, rewards):
         result = torch.tensor([0])

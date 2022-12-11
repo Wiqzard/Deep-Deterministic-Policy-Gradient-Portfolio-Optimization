@@ -104,7 +104,7 @@ class Exp_Fed(Exp_Basic):
                         scales, states, prev_actions, actions, self.args
                     )
                     reward = -sum(rewards)
-                    print(reward)
+                    # print(reward)
                     # reward =  -self.calculate_cummulative_reward(rewards)
                     start = time.time()
                     if self.args.use_amp:
@@ -123,6 +123,7 @@ class Exp_Fed(Exp_Basic):
                     self.train_data.action_memory.store_action(
                         actions.detach().cpu().numpy(), idxs
                     )
+                    pbar.update(args.batch_size)
             # for name, param in self.actor.named_parameters():
             #    print(name, param)
             train_scores = [reward.detach().cpu().numpy()]

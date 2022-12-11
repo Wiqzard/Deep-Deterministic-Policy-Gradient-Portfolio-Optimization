@@ -85,7 +85,7 @@ class Exp_Fed(Exp_Basic):
             ) as pbar:
                 for idxs, scales, states, prev_actions, _ in dataloader:
                     states, _, state_time_marks, _ = states
-                    with torch.autograd.grad_source() as gs:
+                    with torch.autograd.profiler.emit_nvtx():
                         if self.args.use_amp:
                             with torch.cuda.amp.autocast():
                                 actions = self.actor(
@@ -97,7 +97,8 @@ class Exp_Fed(Exp_Basic):
                             scales, states, prev_actions, actions, self.args
                         )
                         reward = -self.calculate_cummulative_reward(rewards)
-                    gradient_graph = gs.get_graph()
+                        grads = torch.autograd.grad(reward, self.actor.parameters())
+                    torch.autograd.profiler.save_nvtx("gradient_graph.nvtx")
                     print("rewward")
                     print(reward)
                     if self.args.use_amp:

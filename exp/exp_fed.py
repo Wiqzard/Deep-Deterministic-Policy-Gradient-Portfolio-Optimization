@@ -151,7 +151,7 @@ class Exp_Fed(Exp_Basic):
                 scale, state, prev_action, action, self.args
             )
             prev_action = action
-            score_history.append(reward)
+            score_history.append(*reward)
             action_history.append(action.cpu().numpy())
             if bar:
                 bar.update(1)

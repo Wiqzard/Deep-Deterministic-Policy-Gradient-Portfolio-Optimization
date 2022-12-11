@@ -4,7 +4,9 @@ from portfolio_manager.algorithms import *
 from environment.environment import Environment
 from agent.agent import Agent
 from utils.constants import *
-from exp.exp_basic import Exp_Basic
+import sys
+
+from exp_basic import Exp_Basic
 
 
 class Exp_Main(Exp_Basic):

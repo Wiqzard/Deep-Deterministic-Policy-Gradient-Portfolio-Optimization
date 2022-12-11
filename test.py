@@ -42,9 +42,10 @@ args.use_gpu = False
 args.use_amp = False
 
 exp = Exp_Fed(args=args)
-exp.train(with_test=True)
+# exp.train(with_test=True)
+dataloader = exp.get_dataloader(flag="train")
 
-
+print(next(iter(dataloader)))
 # from fed_former.data_factory import DataSet
 #
 # from tests.test_args import args

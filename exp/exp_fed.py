@@ -85,18 +85,19 @@ class Exp_Fed(Exp_Basic):
             ) as pbar:
                 for idxs, scales, states, prev_actions, _ in dataloader:
                     states, _, state_time_marks, _ = states
-
-                    if self.args.use_amp:
-                        with torch.cuda.amp.autocast():
+                    with torch.autograd.grad_source() as gs:
+                        if self.args.use_amp:
+                            with torch.cuda.amp.autocast():
+                                actions = self.actor(
+                                    states, state_time_marks, prev_actions
+                                )
+                        else:
                             actions = self.actor(states, state_time_marks, prev_actions)
-                    else:
-                        actions = self.actor(states, state_time_marks, prev_actions)
-
-                    rewards = self.calculate_rewards_torch(
-                        scales, states, prev_actions, actions, self.args
-                    )
-                    reward = -self.calculate_cummulative_reward(rewards)
-                    gradient_graph = reward.get_graph()
+                        rewards = self.calculate_rewards_torch(
+                            scales, states, prev_actions, actions, self.args
+                        )
+                        reward = -self.calculate_cummulative_reward(rewards)
+                    gradient_graph = gs.get_graph()
                     print("rewward")
                     print(reward)
                     if self.args.use_amp:

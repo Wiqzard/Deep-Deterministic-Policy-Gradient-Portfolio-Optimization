@@ -108,6 +108,7 @@ class Exp_Fed(Exp_Basic):
                         reward.backward()
                         optimizer.step()
                     optimizer.zero_grad()
+                    train_scores.append(reward.detach().cpu().numpy())
                     pbar.update(args.batch_size)
                 print(self.train_data.action_memory)
                 self.actor.save_checkpoint()
@@ -150,7 +151,7 @@ class Exp_Fed(Exp_Basic):
                 scale, state, prev_action, action, self.args
             )
             prev_action = action
-            score_history.append(reward)
+            score_history.append(reward.cpu().numpy())
             action_history.append(action.cpu().numpy())
             if bar:
                 bar.update(1)

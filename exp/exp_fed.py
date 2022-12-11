@@ -90,10 +90,10 @@ class Exp_Fed(Exp_Basic):
                     else:
                         actions = self.actor(states, state_time_marks, prev_actions)
 
-                    rewards = calculate_rewards_torch(
+                    rewards = self.calculate_rewards_torch(
                         scales, states, prev_actions, actions, self.args
                     )
-                    reward = calculate_cummulative_reward(rewards)
+                    reward = self.calculate_cummulative_reward(rewards)
 
                     action_history.append(actions.detach().cpu().numpy())
                     self.train_data.action_memory.store_action(
@@ -146,7 +146,7 @@ class Exp_Fed(Exp_Basic):
             if self.args.ba:
                 print(action)
 
-            reward = calculate_rewards_torch(
+            reward = self.calculate_rewards_torch(
                 scale, state, prev_action, action, self.args
             )
             prev_action = action
@@ -158,40 +158,38 @@ class Exp_Fed(Exp_Basic):
         self.test_action_histories.append(action_history)
         return score_history
 
+    def calculate_rewards_torch(self, scales, states, prev_actions, actions, args):
+        """
+        put that into data class
+        args: dict: {"state_t": (X_t, w_t-1), "action_t" : w_t}
+        -> Calculate y_t from X_t = v_t // v_t-1
+        -> Calculate w_t' = (y_t*w_t-1) / (y_t.w_t-1)
+        -> Calculate mu_t: Assume cp=cs i.e. commission rate for selling and purchasing -> mu_t = c*sum(|\omgega_t,i' - \omega_t,i|)
+        -> Calculate r_t = 1/t_f ln(mu_t*y_t . w_t_1)
+        """
+        seq_x_s = states
+        mus, sigmas = scales
+        rewards = []
+        for batch in range(seq_x_s.shape[0]):
+            mu = mus[batch]
+            sigma = sigmas[batch]
+            X_t = seq_x_s[batch]
+            X_t = np.multiply(X_t, sigma) + mu
+            X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
+            w_t_1 = prev_actions[batch].float().to(self.device)
+            if args.use_numeraire:
+                y_t = X_t[args.seq_len, 1:] / X_t[args.seq_len - 1, 1:]
+                y_t = torch.cat((np.ones((1)), y_t))
+            else:
+                y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
+            w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
+            mu_t = 1 - args.commission_rate_selling * sum(
+                torch.abs(w_t_prime - actions[batch])
+            )
+            r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
+            rewards.append(r_t)
+        return rewards
 
-def calculate_rewards_torch(scales, states, prev_actions, actions, args):
-    """
-    put that into data class
-    args: dict: {"state_t": (X_t, w_t-1), "action_t" : w_t}
-    -> Calculate y_t from X_t = v_t // v_t-1
-    -> Calculate w_t' = (y_t*w_t-1) / (y_t.w_t-1)
-    -> Calculate mu_t: Assume cp=cs i.e. commission rate for selling and purchasing -> mu_t = c*sum(|\omgega_t,i' - \omega_t,i|)
-    -> Calculate r_t = 1/t_f ln(mu_t*y_t . w_t_1)
-    """
-    seq_x_s = states
-    mus, sigmas = scales
-    rewards = []
-    for batch in range(seq_x_s.shape[0]):
-        mu = mus[batch]
-        sigma = sigmas[batch]
-        X_t = seq_x_s[batch]
-        X_t = np.multiply(X_t, sigma) + mu
-        X_t = torch.tensor(X_t, dtype=torch.float32).float()
-        w_t_1 = prev_actions[batch].float()
-        if args.use_numeraire:
-            y_t = X_t[args.seq_len, 1:] / X_t[args.seq_len - 1, 1:]
-            y_t = torch.cat((np.ones((1)), y_t))
-        else:
-            y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
-        w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
-        mu_t = 1 - args.commission_rate_selling * sum(
-            torch.abs(w_t_prime - actions[batch])
-        )
-        r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
-        rewards.append(r_t)
-    return rewards
-
-
-def calculate_cummulative_reward(rewards):
-    cumm_reward = [element / (i + 1) for i, element in enumerate(rewards)]
-    return sum(cumm_reward)
+    def calculate_cummulative_reward(self, rewards):
+        cumm_reward = [element / (i + 1) for i, element in enumerate(rewards)]
+        return sum(cumm_reward)

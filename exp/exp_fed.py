@@ -112,7 +112,7 @@ class Exp_Fed(Exp_Basic):
 
                     train_scores.append(reward.detach().cpu().numpy())
                     pbar.update(args.batch_size)
-                print(self.train_data.action_memory)
+                # print(self.train_data.action_memory)
                 self.actor.save_checkpoint()
                 test_scores = self.backtest(bar=pbar) if with_test else None
 

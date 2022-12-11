@@ -89,7 +89,7 @@ class Exp_Fed(Exp_Basic):
                             actions = self.actor(states, state_time_marks, prev_actions)
                     else:
                         actions = self.actor(states, state_time_marks, prev_actions)
-                    action_history.append(actions.detach().numpy())
+                    action_history.append(actions.detach().cpu().numpy())
 
                     rewards = calculate_rewards_torch(
                         scales, states, prev_actions, actions, self.args
@@ -151,7 +151,7 @@ class Exp_Fed(Exp_Basic):
             )
             prev_action = action
             score_history.append(reward)
-            action_history.append(action)
+            action_history.append(action.cpu().numpy())
             if bar:
                 bar.update(1)
 

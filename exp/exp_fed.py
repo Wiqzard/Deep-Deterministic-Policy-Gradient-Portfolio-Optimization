@@ -1,14 +1,43 @@
+
+import numpy as np
+from tqdm import tqdm
+import torch
+from fed_former.agent_ts import Agent
+from fed_former.data_factory import DataSet
+from fed_former.lstm import ActorLSTM
+from torch.utils.data import DataLoader
+import torch.optim as optim
+
+#
+#    args.batch_size, args_shuffle, args.drop_last 
+#    args.d_model, args.embed_type
+
 class Exp_Fed:
     def __init__(self, args) -> None:
         self.args = args
+        self.train_data = DataSet(args, flag="train")
+        self.test_data = DataSet(args, flag="test") 
+    
+        self.get_embedding
+        self.actor = ActorLSTM(args, embed_type=args.embed_type, freq="t")
 
-    def get_embedding(self): 
-
-    def get_datalaoder(self):
-         
+    def get_data(flag: str) -> None:
+        pass
+        
+    
+    def get_datalaoder(self, flag:str) -> DataLoader:
+        args = self.args
+        if flag=="train":
+            return  DataLoader(self.train_data, batch_size=args.batch_size, shuffle=args.shuffle, drop_last=args.drop_last)
+        elif flag=="test":
+            return  DataLoader(self.test_data, batch_size=args.batch_size, shuffle=args.shuffle, drop_last=args.drop_last)
+    
     def get_optimizer(self):
-        #if self.args.optim == "adam":
-        optimizer = optim.Adam(actor.parameters(), lr=args.actor_learning_rate)
+        # sourcery skip: assign-if-exp, inline-immediately-returned-variable
+        if self.args.optim == "adam":
+            optimizer = optim.Adam(self.actor.parameters(), lr=args.actor_learning_rate)
+        else:
+            optimizer = None
         return  optimizer
 
     def learn(self):

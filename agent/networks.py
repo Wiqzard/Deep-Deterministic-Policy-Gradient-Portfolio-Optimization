@@ -119,11 +119,9 @@ class ActorNetwork(nn.Module):
     def save_checkpoint(self):
         if not self.checkpoint_file:
             raise ValueError("Checkpoint file missing.")
-        # print(f"... saving checkpoint ... {self.name}")
         torch.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        #        print(f"... loading checkpoint ... {self.name}")
         self.load_state_dict(torch.load(self.checkpoint_file))
 
     def add_parameter_noise(self, scalar=None):
@@ -146,21 +144,13 @@ class ActorNetwork(nn.Module):
         x = self.dropout(x)
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, (2, 1))
-        # print("x2")
-        # print(x)
         x = self.conv3(x)
         x = self.dropout(x)
         x = torch.flatten(x, 1)
-        # print("x3")
-        # jprint(x)
         x = F.relu(self.fc1(x))
-
-        # print("x4")
-        # print(x)
         action = F.relu(self.fc2(x))
-        # print(action)
         action = torch.cat((action, action_1), dim=-1)
-        action = F.relu(self.fc3(action)).squeeze()
+        action = self.fc3(action).squeeze()
         # print(action)
         #        cash_bias = torch.cat(
         #            (

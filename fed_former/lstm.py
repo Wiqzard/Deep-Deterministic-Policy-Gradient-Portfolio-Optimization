@@ -10,12 +10,13 @@ from fed_former.layers.embeddings import DataEmbedding
 
 
 class ActorLSTM(nn.Module):
-    def __init__(self, args, embedding):
+    def __init__(self, args, embed_type="timef", freq="t"):
         super(ActorLSTM, self).__init__()
         self.args = args
-        self.timeenc = "timef"
         self.dropout = 0.1
-        self.embedding = embedding  # DataEmbedding
+        self.embedding = DataEmbedding(
+            NUM_ASSETS, d_model=args.d_model, embed_type=embed_type, freq=freq
+        )  # embedding  # DataEmbedding
 
         self.lstm = nn.LSTM(
             input_size=args.d_model,
@@ -79,7 +80,6 @@ class CriticLSTM(nn.Module):
     def __init__(self, args, embedding):
         super(CriticLSTM, self).__init__()
         self.args = args
-        self.timeenc = "timef"
         self.dropout = 0.1
         self.embedding = embedding
         self.lstm = nn.LSTM(

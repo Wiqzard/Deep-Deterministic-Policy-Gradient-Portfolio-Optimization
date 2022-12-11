@@ -92,8 +92,8 @@ class DataSet(Dataset):
         seq_y_mark = self.data_stamp[r_begin:r_end, :]
         seq_x = torch.tensor(seq_x, dtype=torch.float32)
         seq_y = torch.tensor(seq_y, dtype=torch.float32)
-        mu = seq_x.mean(0, keepdim=True)
-        sigma = seq_x.std(0, unbiased=False, keepdim=True)
+        mu = seq_x.mean(0, keepdim=True).float()
+        sigma = seq_x.std(0, unbiased=False, keepdim=True).float()
         seq_x -= mu
         seq_x /= sigma
 

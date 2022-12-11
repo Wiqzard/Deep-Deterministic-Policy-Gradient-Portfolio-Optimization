@@ -13,7 +13,7 @@ class ActorLSTM(nn.Module):
     def __init__(self, args, embed_type="timef", freq="t"):
         super(ActorLSTM, self).__init__()
         self.args = args
-        self.dropout = 0.1
+        self.create_checkpoint(name="actor")
         self.embedding = DataEmbedding(
             NUM_ASSETS, d_model=args.d_model, embed_type=embed_type, freq=freq
         )  # embedding  # DataEmbedding
@@ -22,7 +22,7 @@ class ActorLSTM(nn.Module):
             input_size=args.d_model,
             hidden_size=args.hidden_size,
             num_layers=args.num_layers,
-            dropout=self.dropout,
+            dropout=args.dropout,
             batch_first=True,
         )
 
@@ -30,9 +30,26 @@ class ActorLSTM(nn.Module):
         self.fc2 = nn.Linear(args.fc1_out, args.fc2_out)
         self.fc3 = nn.Linear(args.fc2_out + NUM_ASSETS, NUM_ASSETS)
 
+        self.drop_layer = nn.Dropout(p=args.dropout)
+
         self.optimizer = optim.Adam(self.parameters(), lr=args.actor_learning_rate)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.float().to(self.device)
+
+    def create_checkpoint(self, name):
+        self.name = name
+        chkpt_dir = self.args.chkpt_dir
+        if not os.path.exists(chkpt_dir):
+            os.makedirs(chkpt_dir)
+        self.checkpoint_file = os.path.join(chkpt_dir, f"{name}_dpg")
+
+    def save_checkpoint(self):
+        if not self.checkpoint_file:
+            raise ValueError("Checkpoint file missing.")
+        torch.save(self.state_dict(), self.checkpoint_file)
+
+    def load_checkpoint(self):
+        self.load_state_dict(torch.load(self.checkpoint_file))
 
     def init_hidden(self, seq_len):
         return (
@@ -51,12 +68,19 @@ class ActorLSTM(nn.Module):
         hidden_state = hidden_state.permute(1, 0, 2).squeeze(1)
         action = F.relu(self.fc1(hidden_state))
         action = torch.flatten(action, start_dim=1, end_dim=-1)
-        action = F.relu(self.fc2(action))
+        if self.args.dropout_linear:
+            action = self.drop_layer(self.fc2(action))
+            action = F.relu(action)
+        else:
+            action = F.relu(self.fc2(action))
         action = torch.cat((action, action_w_1), dim=-1)
         action = self.fc3(action).squeeze()
         action = action / torch.norm(action, p=2, dim=-1, keepdim=True)
+        if self.args.bb:
+            print(action)
         action = F.softmax(action, dim=-1)
-        print(action)
+        if self.args.ab:
+            print(action)
         return action
 
     def create_checkpoint(self, name):

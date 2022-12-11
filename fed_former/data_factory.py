@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd
 import torch
 import random
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 from data_management.data_manager import PriceHistory
 from agent.time_features import time_features
 from sklearn.preprocessing import StandardScaler
-
+from utils.tools import train_test_split
 
 from utils.constants import *
 
@@ -34,12 +34,13 @@ class DataSet(Dataset):
     def __init__(self, args, flag) -> None:
         super().__init__()
         self.args = args
+        self._set_dates(flag)
         self.price_history = PriceHistory(
             args,
             num_periods=args.seq_len,
             granularity=args.granularity,
-            start_date=args.start_date,
-            end_date=args.end_date,
+            start_date=self.start_date,
+            end_date=self.end_date,
         )
 
         self.action_memory = ActionMemory(len(self.price_history))
@@ -59,6 +60,24 @@ class DataSet(Dataset):
 
         self.scaler = StandardScaler()
         # self.scaled_close_prices = self.get_scaled_close_prices()
+
+    def _set_dates(self, flag) -> None:
+        (
+            start_date_train,
+            end_date_train,
+            start_date_test,
+            end_date_test,
+        ) = train_test_split(
+            self.args.ratio,
+            self.args.granularity,
+            self.args.start_date,
+            self.args.end_date,
+        )
+        self.start_date = start_date_train if flag == "train" else start_date_test
+        self.end_date = end_date_train if flag == "train" else end_date_test
+        if flag == "full":
+            self.start_date = self.args.start_date
+            self.end_date = self.args.end_date
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)

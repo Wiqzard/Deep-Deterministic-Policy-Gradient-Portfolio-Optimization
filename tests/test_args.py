@@ -38,7 +38,7 @@ args.granularity = 900
 args.start_date = "2022-09-01-00-00"
 args.end_date = "2022-10-20-00-00"
 
-args.commission_rate_selling = 0.00
+args.commission_rate_selling = 0.0025
 args.commission_rate_purchasing = 0.0025
 
 args.fill_database = True

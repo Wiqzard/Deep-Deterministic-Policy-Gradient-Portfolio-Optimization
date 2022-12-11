@@ -138,7 +138,7 @@ class Exp_Fed(Exp_Basic):
             state, _, state_time_mark, _ = state
             state = state.unsqueeze(0)
             state_time_mark = state_time_mark.unsqueeze(0)
-            prev_action = prev_action.unsqueeze(0)
+            prev_action = prev_action.unsqueeze(0).to(self.device)
 
             with torch.no_grad():
                 action = self.actor(state, state_time_mark, prev_action)

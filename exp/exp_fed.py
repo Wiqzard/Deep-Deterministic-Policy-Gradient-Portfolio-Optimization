@@ -94,12 +94,7 @@ class Exp_Fed(Exp_Basic):
                         scales, states, prev_actions, actions, self.args
                     )
                     reward = self.calculate_cummulative_reward(rewards)
-
-                    action_history.append(actions.detach().cpu().numpy())
-                    self.train_data.action_memory.store_action(
-                        actions.detach().cpu().numpy(), idxs
-                    )
-
+                    print(reward)
                     if self.args.use_amp:
                         scaler.scale(reward).backward()
                         scaler.step(optimizer)
@@ -108,6 +103,12 @@ class Exp_Fed(Exp_Basic):
                         reward.backward()
                         optimizer.step()
                     optimizer.zero_grad()
+
+                    action_history.append(actions.detach().cpu().numpy())
+                    self.train_data.action_memory.store_action(
+                        actions.detach().cpu().numpy(), idxs
+                    )
+
                     train_scores.append(reward.detach().cpu().numpy())
                     pbar.update(args.batch_size)
                 print(self.train_data.action_memory)

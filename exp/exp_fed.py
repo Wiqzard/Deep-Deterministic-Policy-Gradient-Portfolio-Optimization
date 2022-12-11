@@ -145,12 +145,13 @@ class Exp_Fed(Exp_Basic):
 
         for idx in range(len(test_data)):
             _, scale, state, _, _ = test_data[idx]
+            print(80 * "-")
             # for _, scale, state, _, _ in test_data:
             state, _, state_time_mark, _ = state
             state = state.unsqueeze(0)
             state_time_mark = state_time_mark.unsqueeze(0)
             prev_action = prev_action.unsqueeze(0).to(self.device)
-
+            print(prev_action)
             with torch.no_grad():
                 action = self.actor(state, state_time_mark, prev_action)
 

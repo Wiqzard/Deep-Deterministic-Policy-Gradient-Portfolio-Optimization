@@ -25,7 +25,7 @@ class PortfolioManager:
         commission_rate: float = None,
         min_history: Optional[int] = None,
         flag="train",
-        frequency: int = 1,
+        frequency: int = 10,
         **kwargs,
     ) -> None:
         self.frequency = frequency
@@ -218,6 +218,7 @@ class PortfolioManager:
         # subtract risk-free rate
         # r = _sub_rf(r, rf)
         # freq return and sd
+        r -= 1
         r /= 4 * 24
         if w is None:
             mu = r.mean()
@@ -253,12 +254,13 @@ class PortfolioManager:
         return B - hold_B.shift(1)
 
     def plot_portfolio_value(self, r=None):
-        r = r if r.any() else self.calculate_returns()
+        r = r  # if r.any() else self.calculate_returns()
         temp = self.start_value
         portfolio_values = []
         for return_ in list(r):
             portfolio_values.append(temp)
             temp *= return_
+
         plt.plot(portfolio_values, label=self.name)
         plt.annotate(
             f"{portfolio_values[-1]:.2f}", (len(portfolio_values), portfolio_values[-1])

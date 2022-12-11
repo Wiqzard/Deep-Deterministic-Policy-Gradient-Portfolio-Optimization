@@ -33,6 +33,7 @@ def plot_model(args, model_name=str, flag="full") -> None:
     ##print(sharpe)
     model.plot_portfolio_value(r=returns)
     model.plot_portfolio_weights()
+    plt.show()
 
 
 def plot_portfolio_algos(args, flag="train", commission=None):
@@ -51,12 +52,13 @@ def plot_portfolio_algos(args, flag="train", commission=None):
     for algo in algos:
         weights = algo.run(algo.X)
         returns = algo.calculate_returns(weights)
-        sharpe = algo.sharpe(returns)
+        return_ = round(np.prod(returns), 4)
         algo.plot_portfolio_value(r=returns)
+        sharpe = algo.sharpe(returns)
         # plt.set_label(modelk)
         # plt.label
         print(
-            f" {algo.name} Total Return: {round(np.prod(returns), 4)} Sharpe Ratio(d): {round(sharpe, 2)} "
+            f" {algo.name} Total Return: {return_} Sharpe Ratio(d): {round(sharpe, 2)} "
         )
     plt.grid(b=None, which="major", axis="y", linestyle="--")
     plt.xlabel(f"Periods [{int(ubah.state_space.granularity / 60)} min]")

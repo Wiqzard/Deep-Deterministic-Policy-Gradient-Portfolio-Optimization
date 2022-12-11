@@ -94,7 +94,7 @@ class Exp_Fed(Exp_Basic):
                         scales, states, prev_actions, actions, self.args
                     )
                     print(rewards)
-                    reward = -torch.sum(
+                    reward = -sum(
                         rewards
                     )  # -self.calculate_cummulative_reward(rewards)
 
@@ -203,7 +203,7 @@ class Exp_Fed(Exp_Basic):
             )
             r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
             rewards.append(r_t)
-        return torch.tensor(rewards)
+        return rewards
 
     def calculate_cummulative_reward(self, rewards):
         result = torch.tensor([0])

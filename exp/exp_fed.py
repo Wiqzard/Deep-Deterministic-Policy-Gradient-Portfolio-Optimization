@@ -196,20 +196,20 @@ class Exp_Fed(Exp_Basic):
             X_t = seq_x_s[batch]
             X_t = np.multiply(X_t, sigma) + mu
             X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
-            print("X_t:", X_t)
+            # print("X_t:", X_t)
             w_t_1 = prev_actions[batch].float().to(self.device)
-            print("w_t_1:", w_t_1)
+            # print("w_t_1:", w_t_1)
             y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
-            print("y_t:", y_t)
+            # print("y_t:", y_t)
             w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
-            print("w_t_prime:", w_t_prime)
-            print("actions:", actions[batch])
+            # print("w_t_prime:", w_t_prime)
+            # print("actions:", actions[batch])
             mu_t = 1 - args.commission_rate_selling * sum(
                 torch.abs(w_t_prime - actions[batch])
             )
-            print("mu_t:", mu_t)
+            # print("mu_t:", mu_t)
             r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
-            print("r_t:", r_t)
+            # print("r_t:", r_t)
             rewards.append(r_t)
         return rewards
 

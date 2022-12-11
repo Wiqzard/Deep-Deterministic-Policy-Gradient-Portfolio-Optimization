@@ -6,7 +6,7 @@ from agent.agent import Agent
 from utils.constants import *
 import sys
 
-from exp_basic import Exp_Basic
+from exp.exp_basic import Exp_Basic
 
 
 class Exp_Main(Exp_Basic):

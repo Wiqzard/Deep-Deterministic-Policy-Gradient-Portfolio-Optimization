@@ -239,7 +239,7 @@ class PortfolioManager:
         #    pass
         # sh[sh == np.inf] *= np.sign(mu - rf**(1./freq))
         self._sharpe = sharpe_ratio
-        return sharpe_ratio
+        return ann_sharpe_ratio
 
     def to_rebalance(self, B, X):
         """

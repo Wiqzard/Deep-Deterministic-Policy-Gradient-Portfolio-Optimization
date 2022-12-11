@@ -67,7 +67,7 @@ class Exp_Fed(Exp_Basic):
         dataloader = self.get_dataloader("train")
         optimizer = self.get_optimizer()
         if args.use_amp:
-            scaler = torch.cuda.amp.GrandScaler()
+            scaler = torch.cuda.amp.GradScaler()
         total_steps = (
             len(self.train_data) + len(self.test_data)
             if with_test

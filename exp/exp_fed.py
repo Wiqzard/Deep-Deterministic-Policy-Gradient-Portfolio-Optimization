@@ -1,3 +1,4 @@
+import time
 from typing import List, Union
 import numpy as np
 from tqdm import tqdm
@@ -100,6 +101,8 @@ class Exp_Fed(Exp_Basic):
 
                     print("rewward")
                     print(reward)
+                    start = time.time()
+
                     if self.args.use_amp:
                         scaler.scale(reward).backward()
                         scaler.step(optimizer)
@@ -108,7 +111,8 @@ class Exp_Fed(Exp_Basic):
                         reward.backward()
                         optimizer.step()
                     optimizer.zero_grad()
-
+                    end = time.time()
+                    print("backward took %.6f seconds" % (end - start))
                     action_history.append(actions.detach().cpu().numpy())
                     self.train_data.action_memory.store_action(
                         actions.detach().cpu().numpy(), idxs

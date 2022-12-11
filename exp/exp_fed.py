@@ -10,6 +10,7 @@ import torch.optim as optim
 from exp.exp_basic import Exp_Basic
 
 from utils.constants import *
+from utils.tools import logger
 
 #
 class Exp_Fed(Exp_Basic):
@@ -199,4 +200,13 @@ class Exp_Fed(Exp_Basic):
 
     def calculate_cummulative_reward(self, rewards):
         cumm_reward = [element / (i + 1) for i, element in enumerate(rewards)]
+
         return sum(cumm_reward)
+
+    def log_benchmark(self, in_dollar: bool = True) -> None:
+        """Logs the benchmark of the train and test datasat. Specific algorithm is specified under args.bechmark_name"""
+        portfolio_value_train = self.ubah(flag="train")
+        portfolio_value_test = self.ubah(flag="test")
+        logger.info(
+            f"Benchmark: {self.args.benchmark_name} --- Train Value: {portfolio_value_train:.2f} - Trading Periods: {len(self.train_data)} --- Test Value: {portfolio_value_test:.2f} - Trading Periods: {len(self.test_data)}"
+        )

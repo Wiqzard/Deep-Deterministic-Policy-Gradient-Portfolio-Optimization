@@ -204,6 +204,7 @@ class Exp_Fed(Exp_Basic):
             print("y_t:", y_t)
             w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
             print("w_t_prime:", w_t_prime)
+            print("actions:", actions[batch])
             mu_t = 1 - args.commission_rate_selling * sum(
                 torch.abs(w_t_prime - actions[batch])
             )

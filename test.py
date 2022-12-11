@@ -23,12 +23,13 @@ args.commission_rate_purchasing = 0.0025
 # args.chkpt_dir = "contents/outputs/dpg"
 args.chkpt_dir = "outputs/dpg"
 args.d_model = 512  # 64
-args.embed_type = "timef"
+args.embed_type = "timeF"
 args.hidden_size = 256  # 64
 args.num_layers = 1
 args.fc1_out = 16
 args.fc2_out = 16
 args.dropout = 0.1
+args.dropout_linear = True
 
 args.optim = "adam"
 args.actor_learning_rate = 1e-3
@@ -42,10 +43,8 @@ args.use_gpu = False
 args.use_amp = False
 
 exp = Exp_Fed(args=args)
-# exp.train(with_test=True)
-dataloader = exp.get_dataloader(flag="train")
+exp.train(with_test=False)
 
-print(next(iter(dataloader)))
 # from fed_former.data_factory import DataSet
 #
 # from tests.test_args import args

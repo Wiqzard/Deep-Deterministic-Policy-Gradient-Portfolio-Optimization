@@ -71,7 +71,7 @@ class Exp_Fed(Exp_Basic):
         args = self.args
         if resume:
             self.actor.load_checkpoint()
-        self.log_benchmark(in_dollar=True)
+        # self.log_benchmark(in_dollar=True)
 
         dataloader = self.get_dataloader("train")
         optimizer = self.get_optimizer()
@@ -86,44 +86,47 @@ class Exp_Fed(Exp_Basic):
         for episode in range(args.episodes):
             self.actor.train()
             action_history = []
-            print(episode)
-            print(len(dataloader))
-            for i, (idxs, scales, states, prev_actions, _) in enumerate(dataloader):
-                logger.info(i)
-                print("train")
-                states, _, state_time_marks, _ = states
-                if self.args.use_amp:
-                    with torch.cuda.amp.autocast():
+
+            with tqdm(
+                total=total_steps,
+                leave=self.args.colab,
+                position=1 - int(self.args.colab),
+            ) as pbar:
+                for i, (idxs, scales, states, prev_actions, _) in enumerate(dataloader):
+                    optimizer.zero_grad()
+                    states, _, state_time_marks, _ = states
+                    if self.args.use_amp:
+                        with torch.cuda.amp.autocast():
+                            actions = self.actor(states, state_time_marks, prev_actions)
+                    else:
                         actions = self.actor(states, state_time_marks, prev_actions)
-                else:
-                    actions = self.actor(states, state_time_marks, prev_actions)
-                rewards = self.calculate_rewards_torch(
-                    scales, states, prev_actions, actions, self.args
-                )
-                reward = -sum(rewards)  # -self.calculate_cummulative_reward(rewards)
+                    rewards = self.calculate_rewards_torch(
+                        scales, states, prev_actions, actions, self.args
+                    )
+                    reward = -sum(rewards)
+                    # reward =  -self.calculate_cummulative_reward(rewards)
+                    start = time.time()
+                    if self.args.use_amp:
+                        scaler.scale(reward).backward()
+                        scaler.step(optimizer)
+                        scaler.update()
+                    else:
+                        reward.backward()
+                        optimizer.step()
+                    optimizer.zero_grad()
+                    end = time.time()
+                    # print("backward took %.6f seconds" % (end - start))
 
-                print("rewward")
-                print(reward)
-                print(0)
-                start = time.time()
-                if self.args.use_amp:
-                    scaler.scale(reward).backward()
-                    scaler.step(optimizer)
-                    scaler.update()
-                else:
-                    reward.backward()
-                    optimizer.step()
-                optimizer.zero_grad()
-                end = time.time()
-                print("backward took %.6f seconds" % (end - start))
-
-                action_history.append(actions.detach().cpu().numpy())
-                self.train_data.action_memory.store_action(
-                    actions.detach().cpu().numpy(), idxs
-                )
+                    train_scores.append(reward.detach().cpu().item())
+                    action_history.append(actions.detach().cpu().numpy())
+                    self.train_data.action_memory.store_action(
+                        actions.detach().cpu().numpy(), idxs
+                    )
+            # for name, param in self.actor.named_parameters():
+            #    print(name, param)
             train_scores = [reward.detach().cpu().numpy()]
             self.actor.save_checkpoint()
-            test_scores = self.backtest(bar=None) if with_test else None
+            test_scores = self.backtest(bar=pbar) if with_test else None
 
             self.log_episode_result(
                 episode=episode, train_scores=train_scores, test_scores=test_scores
@@ -146,16 +149,12 @@ class Exp_Fed(Exp_Basic):
         print("test")
         for idx in range(len(test_data)):
             _, scale, state, _, _ = test_data[idx]
-
-            # for _, scale, state, _, _ in test_data:
             state, _, state_time_mark, _ = state
             state = state.unsqueeze(0)
             state_time_mark = state_time_mark.unsqueeze(0)
             prev_action = prev_action.unsqueeze(0).to(self.device)
-            # print(prev_action)
             with torch.no_grad():
                 action = self.actor(state, state_time_mark, prev_action)
-
             if self.args.ba:
                 print(action)
 

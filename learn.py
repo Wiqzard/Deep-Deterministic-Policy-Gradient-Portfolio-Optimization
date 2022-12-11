@@ -109,17 +109,13 @@ from fed_former.layers.embeddings import DataEmbedding
 import torch.optim as optim
 
 embedding = DataEmbedding(c_in=8, d_model=args.d_model, embed_type="timef", freq="t")
-actor = ActorLSTM(args, embedding)
 
 # optimizer = optim.Adam(actor.parameters(), lr=args.actor_learning_rate)
-optimizer = optim.SGD(actor.parameters(), lr=0.1)
 import time
 
 criterion = torch.nn.MSELoss()
 
-pytorch_total_params = sum(p.numel() for p in actor.parameters() if p.requires_grad)
 print("000000000")
-print(pytorch_total_params)
 
 
 def train2():
@@ -129,25 +125,97 @@ def train2():
         ):
             actor.zero_grad()
             states, _, state_time_marks, _ = states
+            print(states.shape)
+            print(state_time_marks.shape)
+            print(prev_actions.shape)
             actions = actor(states, state_time_marks, prev_actions)
+            actions.requires_grad = True
             print(actions)
             rewards = calculate_rewards_torch(
                 scales, states, prev_actions, actions, args
             )
             # data.action_memory.store_action(actions.detach().numpy(), idxs)
             # reward = sum(rewards)
-            #            reward = calculate_cummulative_reward(rewards)
-            reward = criterion(actions, torch.zeros_like(actions))
+            reward = calculate_cummulative_reward(rewards)
+            # reward = criterion(actions, torch.zeros_like(actions))
             start = time.time()
             reward.backward()
             print(80 * "-")
-            print(actor.lstm._all_weights.grad.shape)
             print(reward)
             optimizer.step()
-            optimizer.zero_grad()
             end = time.time()
             print("time", end - start)
 
+            for name, param in actor.named_parameters():
+                print(name, param)
+
 
 # train()
-train2()
+def train3():
+    actor = ActorLSTM(args, "timeF")
+    optimizer = optim.SGD(actor.parameters(), lr=0.1)
+    pytorch_total_params = sum(p.numel() for p in actor.parameters() if p.requires_grad)
+    print(pytorch_total_params)
+
+    for i in range(10):
+        for j in range(100):
+            optimizer.zero_grad()
+            state = torch.randn((3, 50, 8))
+            state_mark = torch.randn((3, 50, 5))
+            prev_action = torch.randn((3, 8))
+            next_state = torch.randn((3, 50, 8))
+            scales = (torch.randn((3, 8)), torch.randn((3, 8)))
+            actions = actor(state, state_mark, prev_action)
+
+            # rewards = calculate_rewards_torch(scales, state, prev_action, actions, args)
+            # reward = calculate_cummulative_reward(rewards)
+            reward = actions.mean()
+            print(reward)
+            reward.backward()
+            optimizer.step()
+
+
+train3()
+
+
+def check_backward_pass(model):
+    # Set the model to evaluation mode
+    model.eval()
+
+    # Generate some random input and target data
+    state = torch.randn((3, 50, 8))
+    state_mark = torch.randn((3, 50, 5))
+    prev_action = torch.randn((3, 8))
+
+    # Make sure the gradients are not being tracked
+    with torch.no_grad():
+        # Forward pass
+        output = model(state, state_mark, prev_action)
+
+        # Calculate the loss
+        loss = output.mean()
+
+        # Save the initial values of the model's parameters
+        init_params = [p.clone() for p in model.parameters()]
+
+    # Make sure the loss requires gradients
+    loss.requires_grad = True
+
+    # Perform the backward pass
+    loss.backward()
+
+    # Check if the model's parameters have changed
+    updated_params = [p for p in model.parameters()]
+    for init_param, updated_param in zip(init_params, updated_params):
+        if not torch.allclose(init_param, updated_param):
+            print("Backward pass updated the model's parameters")
+            return True
+
+    print("Backward pass did not update the model's parameters")
+    return False
+
+
+model = ActorLSTM(args, "timeF")
+# print(check_backward_pass(model))
+
+print(list(model.parameters()))

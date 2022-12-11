@@ -85,7 +85,7 @@ args.fc2_out = 16
 args.dropout = 0.1
 
 args.optim = "adam"
-args.actor_learning_rate = 1e-3
+args.actor_learning_rate = 10 #1e-3
 
 args.batch_size = 3
 args.shuffle = False

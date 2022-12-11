@@ -59,8 +59,11 @@ class Exp_Fed(Exp_Basic):
         else:
             return None
 
-    def train(self, with_test: bool = True) -> None:
+    def train(self, with_test: bool = True, resume: bool = False) -> None:
         args = self.args
+        if resume:
+            self.actor.load_checkpoint()
+
         dataloader = self.get_dataloader("train")
         optimizer = self.get_optimizer()
         if args.use_amp:

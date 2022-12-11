@@ -71,7 +71,7 @@ class Exp_Fed(Exp_Basic):
         args = self.args
         if resume:
             self.actor.load_checkpoint()
-        # self.log_benchmark(in_dollar=True)
+        self.log_benchmark(in_dollar=True)
 
         dataloader = self.get_dataloader("train")
         optimizer = self.get_optimizer()
@@ -104,6 +104,7 @@ class Exp_Fed(Exp_Basic):
                         scales, states, prev_actions, actions, self.args
                     )
                     reward = -sum(rewards)
+                    print(reward)
                     # reward =  -self.calculate_cummulative_reward(rewards)
                     start = time.time()
                     if self.args.use_amp:

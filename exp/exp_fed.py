@@ -12,7 +12,10 @@ from exp.exp_basic import Exp_Basic
 
 from utils.constants import *
 from utils.tools import logger
+import logging
 
+logging.basicConfig()
+logger = logging.getLogger()
 #
 class Exp_Fed(Exp_Basic):
     def __init__(self, args) -> None:
@@ -38,6 +41,7 @@ class Exp_Fed(Exp_Basic):
                 batch_size=args.batch_size,
                 shuffle=args.shuffle,
                 drop_last=args.droplast,
+                num_workers=args.num_workers,
             )
         elif flag == "test":
             return DataLoader(
@@ -45,6 +49,7 @@ class Exp_Fed(Exp_Basic):
                 batch_size=args.batch_size,
                 shuffle=args.shuffle,
                 drop_last=args.drop_last,
+                num_workers=args.num_workers,
             )
         elif flag == "train":
             return DataLoader(
@@ -52,6 +57,7 @@ class Exp_Fed(Exp_Basic):
                 batch_size=args.batch_size,
                 shuffle=args.shuffle,
                 drop_last=args.drop_last,
+                num_workers=args.num_workers,
             )
 
     def get_optimizer(self) -> Union[optim.Adam, optim.SGD]:
@@ -79,49 +85,45 @@ class Exp_Fed(Exp_Basic):
 
         for episode in range(args.episodes):
             self.actor.train()
-            train_scores = []
             action_history = []
-            with tqdm(
-                total=total_steps, leave=args.colab, position=1 - int(args.colab)
-            ) as pbar:
-                for idxs, scales, states, prev_actions, _ in dataloader:
-                    states, _, state_time_marks, _ = states
-                    if self.args.use_amp:
-                        with torch.cuda.amp.autocast():
-                            actions = self.actor(states, state_time_marks, prev_actions)
-                    else:
+            print(episode)
+            print(len(dataloader))
+            for i, (idxs, scales, states, prev_actions, _) in enumerate(dataloader):
+                logger.info(i)
+                print("train")
+                states, _, state_time_marks, _ = states
+                if self.args.use_amp:
+                    with torch.cuda.amp.autocast():
                         actions = self.actor(states, state_time_marks, prev_actions)
-                    rewards = self.calculate_rewards_torch(
-                        scales, states, prev_actions, actions, self.args
-                    )
-                    reward = -sum(
-                        rewards
-                    )  # -self.calculate_cummulative_reward(rewards)
+                else:
+                    actions = self.actor(states, state_time_marks, prev_actions)
+                rewards = self.calculate_rewards_torch(
+                    scales, states, prev_actions, actions, self.args
+                )
+                reward = -sum(rewards)  # -self.calculate_cummulative_reward(rewards)
 
-                    print("rewward")
-                    print(reward)
+                print("rewward")
+                print(reward)
+                print(0)
+                start = time.time()
+                if self.args.use_amp:
+                    scaler.scale(reward).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    reward.backward()
+                    optimizer.step()
+                optimizer.zero_grad()
+                end = time.time()
+                print("backward took %.6f seconds" % (end - start))
 
-                    start = time.time()
-                    if self.args.use_amp:
-                        scaler.scale(reward).backward()
-                        scaler.step(optimizer)
-                        scaler.update()
-                    else:
-                        reward.backward()
-                        optimizer.step()
-                    optimizer.zero_grad()
-                    end = time.time()
-                    print("backward took %.6f seconds" % (end - start))
-
-                    action_history.append(actions.detach().cpu().numpy())
-                    self.train_data.action_memory.store_action(
-                        actions.detach().cpu().numpy(), idxs
-                    )
-                    train_scores.append(reward.detach().cpu().numpy())
-                    pbar.update(args.batch_size)
-
-                self.actor.save_checkpoint()
-                test_scores = self.backtest(bar=pbar) if with_test else None
+                action_history.append(actions.detach().cpu().numpy())
+                self.train_data.action_memory.store_action(
+                    actions.detach().cpu().numpy(), idxs
+                )
+            train_scores = [reward.detach().cpu().numpy()]
+            self.actor.save_checkpoint()
+            test_scores = self.backtest(bar=None) if with_test else None
 
             self.log_episode_result(
                 episode=episode, train_scores=train_scores, test_scores=test_scores
@@ -141,16 +143,16 @@ class Exp_Fed(Exp_Basic):
 
         test_data = data or self.test_data
         prev_action = self.get_start_action(flag="uni")
-
+        print("test")
         for idx in range(len(test_data)):
             _, scale, state, _, _ = test_data[idx]
-            print(80 * "-")
+
             # for _, scale, state, _, _ in test_data:
             state, _, state_time_mark, _ = state
             state = state.unsqueeze(0)
             state_time_mark = state_time_mark.unsqueeze(0)
             prev_action = prev_action.unsqueeze(0).to(self.device)
-            print(prev_action)
+            # print(prev_action)
             with torch.no_grad():
                 action = self.actor(state, state_time_mark, prev_action)
 
@@ -160,7 +162,6 @@ class Exp_Fed(Exp_Basic):
             reward = self.calculate_rewards_torch(
                 scale, state, prev_action, action, self.args
             )
-            print(len(reward))
             reward = reward[-1].cpu().numpy()
             prev_action = action
             score_history.append(reward)
@@ -189,7 +190,6 @@ class Exp_Fed(Exp_Basic):
         seq_x_s = states
         mus, sigmas = scales
         rewards = []
-        print("begin reward")
         for batch in range(seq_x_s.shape[0]):
             mu = mus[batch]
             sigma = sigmas[batch]

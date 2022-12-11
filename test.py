@@ -3,9 +3,9 @@ from exp.exp_fed import Exp_Fed
 
 args = dotdict()
 args.colab = False
-args.bb = True
-args.ba = True
-args.ab = True
+args.bb = False  # True
+args.ba = False  # True
+args.ab = False  # True
 
 args.episodes = 500
 args.ratio = 0.8
@@ -22,10 +22,9 @@ args.commission_rate_purchasing = 0.0025
 
 # args.chkpt_dir = "contents/outputs/dpg"
 args.chkpt_dir = "outputs/dpg"
-args.d_model = 64
-args.d_model = 64
+args.d_model = 512  # 64
 args.embed_type = "timef"
-args.hidden_size = 64
+args.hidden_size = 256  # 64
 args.num_layers = 1
 args.fc1_out = 16
 args.fc2_out = 16
@@ -34,9 +33,10 @@ args.dropout = 0.1
 args.optim = "adam"
 args.actor_learning_rate = 1e-3
 
-args.batch_size = 3
+args.batch_size = 32
 args.shuffle = False
 args.drop_last = False
+args.num_workers = 0
 
 args.use_gpu = False
 args.use_amp = False

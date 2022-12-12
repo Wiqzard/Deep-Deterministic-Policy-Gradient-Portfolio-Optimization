@@ -14,6 +14,7 @@ from utils.constants import *
 from utils.tools import logger
 import logging
 
+LAMBDA = 1e-4
 logging.basicConfig()
 logger = logging.getLogger()
 #
@@ -32,6 +33,13 @@ class Exp_Fed(Exp_Basic):
     def get_start_action(self, flag="uni"):
         if flag == "uni":
             return torch.tensor(NUM_ASSETS * [1 / NUM_ASSETS])
+
+    @property
+    def actor_params(self):
+        total_params = sum(
+            p.numel() for p in self.actor.parameters() if p.requires_grad
+        )
+        return total_params
 
     def get_dataloader(self, flag: str, data=None) -> DataLoader:
         args = self.args
@@ -71,15 +79,26 @@ class Exp_Fed(Exp_Basic):
         else:
             return None
 
-    def criterion(self, actions):
-        return torch.mean(
-            torch.log(torch.sum(actions[:, :] * self.__future_price[:, :], dim=1))
-            - torch.sum(
-                torch.abs(actions[:, :] - self.previous_w[:, :])
-                * self.__commission_ratio,
-                dim=1,
+    def get_loss(self, flag="with_w"):
+        def crit2(self, actions):
+            return -torch.mean(
+                torch.log(torch.sum(actions * self.__future_price, dim=1))
+            ) + LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
+
+        def criterion(self, actions):
+            return torch.mean(
+                torch.log(torch.sum(actions[:, :] * self.__future_price[:, :], dim=1))
+                - torch.sum(
+                    torch.abs(actions[:, :] - self.previous_w[:, :])
+                    * self.__commission_ratio,
+                    dim=1,
+                )
             )
-        )
+
+        if flag == "plain":
+            return crit2
+        elif flag == "with_w":
+            return criterion
 
     def __set_future_price(self, states, scales) -> None:
         """y_t from paper"""
@@ -103,7 +122,7 @@ class Exp_Fed(Exp_Basic):
 
         dataloader = self.get_dataloader("train")
         optimizer = self.get_optimizer(ascend=True)
-        criterion = self.criterion
+        criterion = self.get_loss(args.criterion)  # criterion
 
         if args.use_amp:
             scaler = torch.cuda.amp.GradScaler()

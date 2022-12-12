@@ -254,7 +254,7 @@ class Exp_Fed(Exp_Basic):
         )
 
         w_t = actions
-        mu = 1 - c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1)
+        mu = c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1)
 
         def recurse(mu0):
             factor1 = 1 / (1 - c * w_t_1[:, 0])

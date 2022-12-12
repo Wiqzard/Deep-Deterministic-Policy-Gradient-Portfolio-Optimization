@@ -82,7 +82,7 @@ class Exp_Basic:
                 )
             else:
                 train_value = self.initial_value * math.exp(sum(train_scores))
-                print(train_scores)
+                print(len(train_scores))
                 test_value = (
                     self.initial_value * math.exp(sum(test_scores))
                     if test_scores

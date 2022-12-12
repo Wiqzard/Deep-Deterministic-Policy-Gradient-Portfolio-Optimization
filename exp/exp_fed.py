@@ -224,9 +224,9 @@ class Exp_Fed(Exp_Basic):
                 print(action)
 
             self.__set_future_price(state, scale)
-            self.__previous_w = prev_actions.to(self.device)
+            self.__previous_w = prev_action.to(self.device)
 
-            reward = self.calculate_rewards_torch(action)[-1].cpu().numpy()
+            reward = self.calculate_rewards_torch(action.unsqueeze(0))[-1].cpu().numpy()
             prev_action = action
             score_history.append(reward)
             action_history.append(action.cpu().numpy())

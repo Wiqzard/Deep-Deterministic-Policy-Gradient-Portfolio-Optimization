@@ -235,12 +235,6 @@ class Exp_Fed(Exp_Basic):
         self.test_action_histories.append(action_history)
         return score_history
 
-    #    def reward(self, model_output):
-    # reward = self.calculate_cummulative_reward(
-    # self.calculate_rewards_torch(model_output)
-    # )
-    # return reward
-
     def calculate_rewards_torch(self, actions):
         """
         put that into data class
@@ -254,7 +248,11 @@ class Exp_Fed(Exp_Basic):
         rewards = []
         y_t = self.__future_price
         w_t_1 = self.__previous_w
-        w_t_prime = torch.multiply(y_t, w_t_1) / torch.dot(y_t, w_t_1)
+        # w_t_prime = torch.multiply(y_t, w_t_1) / torch.dot(y_t, w_t_1)
+        w_t_prime = torch.multiply(y_t, w_t_1) / torch.sum(
+            y_t * w_t_1, dim=1, keepdim=True
+        )
+
         w_t = actions
         mu = 1 - c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1)
 

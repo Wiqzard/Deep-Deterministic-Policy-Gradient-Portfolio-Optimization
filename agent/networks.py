@@ -41,18 +41,18 @@ class CriticNetwork(nn.Module):
         action = action.to(self.device)
         state_value = state[0].to(self.device)
 
-        state_value = F.relu(self.conv1(state_value))
-        state_value = F.relu(self.conv2(state_value))
+        state_value = F.leaky_relu(self.conv1(state_value))
+        state_value = F.leaky_relu(self.conv2(state_value))
         state_value = F.max_pool2d(state_value, (2, 1))
         state_value = self.conv3(state_value)
 
         state_value = torch.flatten(state_value, 1)
         state_value = self.layer_norm(state_value)
         state_value = F.relu(self.fc1(state_value))
-        state_value = F.relu(self.fc2(state_value))
+        state_value = F.leaky_relu(self.fc2(state_value))
 
         state_value = torch.cat((state_value, action_1), dim=-1)
-        state_value = F.relu(self.fc3(state_value))
+        state_value = F.leaky_relu(self.fc3(state_value))
 
         state_action_value = torch.cat((state_value, action), dim=-1)
         state_action_value = self.fc4(state_action_value)
@@ -140,15 +140,15 @@ class ActorNetwork(nn.Module):
         """
         action_1 = state[1].to(self.device)
         state_value = state[0].to(self.device)
-        x = F.relu(self.conv1(state_value))
+        x = F.leaky_relu(self.conv1(state_value))
         x = self.dropout(x)
-        x = F.relu(self.conv2(x))
+        x = F.leaky_relu(self.conv2(x))
         x = F.max_pool2d(x, (2, 1))
         x = self.conv3(x)
         x = self.dropout(x)
         x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        action = F.relu(self.fc2(x))
+        x = F.leaky_relu(self.fc1(x))
+        action = F.leaky_relu(self.fc2(x))
         action = torch.cat((action, action_1), dim=-1)
         action = self.fc3(action).squeeze()
         # print(action)
@@ -175,9 +175,8 @@ class ActorNetwork(nn.Module):
             if action.shape[0] == 8:
                 print(action)
                 print(action / torch.norm(action, p=2, dim=-1, keepdim=True))
-        action = F.softmax(
-            action / torch.norm(action, p=2, dim=-1, keepdim=True), dim=-1
-        )
+        action = action / torch.norm(action, p=2, dim=-1, keepdim=True)
+
         return action
 
 
@@ -304,12 +303,12 @@ class ActorNetwork2(nn.Module):
         action_1 = state[1].unsqueeze(-1).to(self.device)
         state_value = state[0].to(self.device)
 
-        x = self.relu(self.conv1(state_value))
-        x = self.relu(self.conv2(x)).squeeze(-2).permute(0, 2, 1)
+        x = F.leaky_relu(self.conv1(state_value))
+        x = F.leaky_relu(self.conv2(x)).squeeze(-2).permute(0, 2, 1)
         x = torch.cat((x, action_1), dim=-1).permute(0, 2, 1).unsqueeze(-1)
         action = self.conv3(x).squeeze()
-        action = self.relu(self.linear(action))
-        action = self.relu(self.linear2(action))
+        action = F.leaky_relu(self.linear(action))
+        action = F.leaky_relu(self.linear2(action))
         cash_bias = torch.cat(
             (
                 torch.ones(*action.shape[:-1], 1),
@@ -320,5 +319,5 @@ class ActorNetwork2(nn.Module):
         if self.args.use_numeraire:
             action = torch.add(action, cash_bias)
         # print(action)
-        action = self.softmax(action)
+        action = F.softmax(action)
         return action

@@ -108,15 +108,6 @@ from fed_former.lstm import ActorLSTM
 from fed_former.layers.embeddings import DataEmbedding
 import torch.optim as optim
 
-embedding = DataEmbedding(c_in=8, d_model=args.d_model, embed_type="timef", freq="t")
-
-# optimizer = optim.Adam(actor.parameters(), lr=args.actor_learning_rate)
-import time
-
-criterion = torch.nn.MSELoss()
-
-print("000000000")
-
 
 def train2():
     for epoch_ in range(epoch):
@@ -151,71 +142,75 @@ def train2():
 
 
 # train()
-def train3():
-    actor = ActorLSTM(args, "timeF")
-    optimizer = optim.SGD(actor.parameters(), lr=0.1)
-    pytorch_total_params = sum(p.numel() for p in actor.parameters() if p.requires_grad)
-    print(pytorch_total_params)
+class A:
+    def __init__(self) -> None:
+        self.commission_rate_selling = 0.0025
 
-    for i in range(10):
-        for j in range(100):
-            optimizer.zero_grad()
-            state = torch.randn((3, 50, 8))
-            state_mark = torch.randn((3, 50, 5))
-            prev_action = torch.randn((3, 8))
-            next_state = torch.randn((3, 50, 8))
-            scales = (torch.randn((3, 8)), torch.randn((3, 8)))
-            actions = actor(state, state_mark, prev_action)
+    def train3(self):
+        actor = ActorLSTM(args, "timeF")
+        actor.train()
+        optimizer = optim.Adam(actor.parameters(), lr=0.1, maximize=True)
+        print(actor.parameters())
+        pytorch_total_params = sum(
+            p.numel() for p in actor.parameters() if p.requires_grad
+        )
+        print(pytorch_total_params)
+        criterion = self.reward
+        for i in range(10):
+            for j in range(100):
+                optimizer.zero_grad()
+                state = torch.randn((3, 50, 8))
+                state_mark = torch.randn((3, 50, 5))
+                prev_action = torch.randn((3, 8))
+                next_state = torch.randn((3, 50, 8))
+                scales = (torch.randn((3, 8)), torch.randn((3, 8)))
+                self.previous_w = torch.abs(prev_action)
+                self.future_price = torch.abs(
+                    torch.divide(next_state[:, -1, :], next_state[:, -2, :])
+                )
+                actions = actor(state, state_mark, prev_action)
 
-            # rewards = calculate_rewards_torch(scales, state, prev_action, actions, args)
-            # reward = calculate_cummulative_reward(rewards)
-            reward = actions.mean()
-            print(reward)
-            reward.backward()
-            optimizer.step()
+                reward_ = criterion(torch.abs(actions))
+                # print(reward_)
+                # rewards = calculate_rewards_torch(scales, state, prev_action, actions, args)
+                # reward = calculate_cummulative_reward(rewards)
+                # print(reward_)
+                reward_.backward()
+                print(actor.lstm.weight_ih_l0.grad)
+                optimizer.step()
 
+            for name, param in actor.named_parameters():
+                if param.requires_grad:
+                    print(name, param.data)
 
-train3()
-
-
-def check_backward_pass(model):
-    # Set the model to evaluation mode
-    model.eval()
-
-    # Generate some random input and target data
-    state = torch.randn((3, 50, 8))
-    state_mark = torch.randn((3, 50, 5))
-    prev_action = torch.randn((3, 8))
-
-    # Make sure the gradients are not being tracked
-    with torch.no_grad():
-        # Forward pass
-        output = model(state, state_mark, prev_action)
-
-        # Calculate the loss
-        loss = output.mean()
-
-        # Save the initial values of the model's parameters
-        init_params = [p.clone() for p in model.parameters()]
-
-    # Make sure the loss requires gradients
-    loss.requires_grad = True
-
-    # Perform the backward pass
-    loss.backward()
-
-    # Check if the model's parameters have changed
-    updated_params = [p for p in model.parameters()]
-    for init_param, updated_param in zip(init_params, updated_params):
-        if not torch.allclose(init_param, updated_param):
-            print("Backward pass updated the model's parameters")
-            return True
-
-    print("Backward pass did not update the model's parameters")
-    return False
+    def reward(self, actions):
+        return torch.mean(
+            torch.log(torch.sum(actions * self.future_price, dim=1))
+            - torch.sum(
+                torch.abs(actions - self.previous_w) * self.commission_rate_selling,
+                dim=1,
+            )
+        )
 
 
-model = ActorLSTM(args, "timeF")
-# print(check_backward_pass(model))
+# train3()
+a = A()
+a.train3()
 
-print(list(model.parameters()))
+#
+# model = ActorLSTM(args, "timeF")
+## print(check_backward_pass(model))
+#
+# print(list(model.parameters()))
+#
+# def reward(actions):
+#    output = self.__net.output[:] #actions
+#    future_price = self.__future_price #
+#    output_sum = torch.sum(output * future_price, dim=1)
+#    output_mean_log = -torch.mean(torch.log(output_sum))
+#    prev_w = self.__net.previous_w
+#    abs_output_diff = torch.abs(output[:, 1:] - prev_w)
+#    commission_ratio = self.__commission_ratio
+#    output_diff_mean = torch.mean(abs_output_diff * commission_ratio, dim=1)
+#    return output_mean_log - output_diff_mean
+#

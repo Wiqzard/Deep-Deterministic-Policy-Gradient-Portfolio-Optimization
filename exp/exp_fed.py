@@ -5,7 +5,7 @@ from tqdm import tqdm
 import torch
 from fed_former.agent_ts import Agent
 from fed_former.data_factory import DataSet
-from fed_former.lstm import ActorLSTM
+from fed_former.lstm import ActorLSTM, ActorNetwork2
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from exp.exp_basic import Exp_Basic
@@ -23,7 +23,7 @@ class Exp_Fed(Exp_Basic):
         self.args = args
         self.train_data = DataSet(args, flag="train")
         self.test_data = DataSet(args, flag="test")
-
+        self.__commission_ratio = args.commission_rate_selling
         self.device = "cuda" if args.use_gpu else "cpu"
         self.actor = ActorLSTM(args, embed_type=args.embed_type, freq="t").to(
             self.device
@@ -60,12 +60,39 @@ class Exp_Fed(Exp_Basic):
                 num_workers=args.num_workers,
             )
 
-    def get_optimizer(self) -> Union[optim.Adam, optim.SGD]:
+    def get_optimizer(self, ascend: bool = False) -> Union[optim.Adam, optim.SGD]:
         # sourcery skip: assign-if-exp, inline-immediately-returned-variable
         if self.args.optim == "adam":
-            return optim.Adam(self.actor.parameters(), lr=self.args.actor_learning_rate)
+            return optim.Adam(
+                self.actor.parameters(),
+                lr=self.args.actor_learning_rate,
+                maximize=ascend,
+            )
         else:
             return None
+
+    def criterion(self, actions):
+        return torch.mean(
+            torch.log(torch.sum(actions * self.__future_price, dim=1))
+            - torch.sum(
+                torch.abs(actions - self.previous_w) * self.__commission_ratio,
+                dim=1,
+            )
+        )
+
+    def __set_future_price(self, states, scales) -> None:
+        """y_t from paper"""
+        X_t = torch.add(
+            torch.multiply(
+                states,
+                scales[1],
+            ),
+            scales[0],
+        )
+        # print("X", X_t)
+        self.__future_price = torch.divide(X_t[:, -1, :], X_t[:, -2, :])
+        # print("future", self.__future_price)
+        # print(self.__future_price.shape)
 
     def train(self, with_test: bool = True, resume: bool = False) -> None:
         args = self.args
@@ -74,7 +101,9 @@ class Exp_Fed(Exp_Basic):
         self.log_benchmark(in_dollar=True)
 
         dataloader = self.get_dataloader("train")
-        optimizer = self.get_optimizer()
+        optimizer = self.get_optimizer(ascend=True)
+        criterion = self.criterion
+
         if args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
         total_steps = (
@@ -93,19 +122,25 @@ class Exp_Fed(Exp_Basic):
                 position=1 - int(self.args.colab),
             ) as pbar:
                 for i, (idxs, scales, states, prev_actions, _) in enumerate(dataloader):
-                    optimizer.zero_grad()
+
                     states, _, state_time_marks, _ = states
+                    self.previous_w = prev_actions
+                    self.__set_future_price(states, scales)
+                    optimizer.zero_grad()
                     if self.args.use_amp:
                         with torch.cuda.amp.autocast():
                             actions = self.actor(states, state_time_marks, prev_actions)
                     else:
                         actions = self.actor(states, state_time_marks, prev_actions)
-                    rewards = self.calculate_rewards_torch(
-                        scales, states, prev_actions, actions, self.args
-                    )
-                    reward = -sum(rewards)
+                    print(actions)
+                    # rewards = self.calculate_rewards_torch(
+                    #    scales, states, prev_actions, actions, self.args
+                    # )
+                    # reward = -sum(rewards)
                     # print(reward)
                     # reward =  -self.calculate_cummulative_reward(rewards)
+                    reward = criterion(actions)
+                    # print(reward)
                     start = time.time()
                     if self.args.use_amp:
                         scaler.scale(reward).backward()
@@ -113,6 +148,7 @@ class Exp_Fed(Exp_Basic):
                         scaler.update()
                     else:
                         reward.backward()
+                        # print(self.actor.lstm.weight_ih_l0.grad)
                         optimizer.step()
                     optimizer.zero_grad()
                     end = time.time()
@@ -159,10 +195,12 @@ class Exp_Fed(Exp_Basic):
                 action = self.actor(state, state_time_mark, prev_action)
             if self.args.ba:
                 print(action)
-
+            # print(action)
             reward = self.calculate_rewards_torch(
                 scale, state, prev_action, action, self.args
             )
+            # print(reward)
+
             reward = reward[-1].cpu().numpy()
             prev_action = action
             score_history.append(reward)
@@ -212,15 +250,7 @@ class Exp_Fed(Exp_Basic):
             r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
             # print("r_t:", r_t)
             rewards.append(r_t)
-        return rewards
-
-    def calculate_cummulative_reward(self, rewards):
-        result = torch.tensor([0])
-        for reward in enumerate(rewards):
-            reward
-        cumm_reward = [element / (i + 1) for i, element in enumerate(rewards)]
-
-        return torch.sum(cumm_reward)
+        return rewards  ##before without and additional function, btu it was simply mean
 
     def log_benchmark(self, in_dollar: bool = True) -> None:
         """Logs the benchmark of the train and test datasat. Specific algorithm is specified under args.bechmark_name"""

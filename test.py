@@ -15,35 +15,37 @@ args.seq_len = 50
 
 args.database_path = "outputs/coin_history.db"
 args.granularity = 900
-args.start_date = "2022-10-01-00-00"
+args.start_date = "2022-08-01-00-00"
 args.end_date = "2022-10-20-00-00"
-args.commission_rate_selling = 0.0025
+args.commission_rate_selling = 0  # 0.0025
 args.commission_rate_purchasing = 0.0025
 
 # args.chkpt_dir = "contents/outputs/dpg"
 args.chkpt_dir = "outputs/dpg"
 args.d_model = 512  # 64
 args.embed_type = "timeF"
-args.hidden_size = 256  # 64
+args.hidden_size = 512  # 64
 args.num_layers = 1
-args.fc1_out = 16
-args.fc2_out = 16
+args.fc1_out = 256
+args.fc2_out = 64
 args.dropout = 0.1
 args.dropout_linear = True
 
 args.optim = "adam"
-args.actor_learning_rate = 1e-3
+args.actor_learning_rate = 1e-1
 
 args.batch_size = 32
-args.shuffle = False
+args.shuffle = True
 args.drop_last = False
 args.num_workers = 0
 
 args.use_gpu = False
 args.use_amp = False
 
+args.conv_dim = 32
+args.linear2 = 64
 exp = Exp_Fed(args=args)
-exp.train(with_test=False)
+exp.train(with_test=True)
 
 # from fed_former.data_factory import DataSet
 #

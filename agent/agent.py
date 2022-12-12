@@ -59,13 +59,13 @@ class Agent(object):
             if flag == "train":
                 if self.args.noise == "OU":
                     noise = torch.tensor(self.noise()).float().to(self.device)
-                    max_value = max(mu)
+                    max_value = 1.5 * max(mu)
                     noise = torch.clip(noise, -max_value * 0.9, max_value * 0.9)
                     mu_prime = mu + noise
-                    # mu_prime = F.softmax(mu + noise)
-                    mu_prime = torch.abs(mu_prime) / torch.norm(
-                        mu_prime, p=2, dim=-1, keepdim=True
-                    )
+                    mu_prime = F.softmax(mu + noise, dim=-1)
+                    # mu_prime = torch.abs(mu_prime) / torch.norm(
+                    #    mu_prime, p=2, dim=-1, keepdim=True
+                    # )
                     # mu_prime = F.softmax(mu)
                 elif self.args.noise == "param":
                     self.actor_noised.eval()
@@ -88,7 +88,7 @@ class Agent(object):
                     if random.random() < 0.1:
                         mu_prime = self.random_action().float().to(self.device)
                 else:
-                    mu_prime = mu
+                    mu_prime = F.softmax(mu)
             else:
                 mu_prime = F.softmax(mu)
         self.actor.train()
@@ -109,26 +109,6 @@ class Agent(object):
         action = action + noise
         action = action / sum(action)
         return action
-
-    def fix_const_outputs(self):
-        """A function with no meaning, that fixes the biggest bug in history"""
-        # if self.memory2.mem_cntr < 2:  # self.args.batch_size:
-        #    return
-        # print("------------------------- bullshit ---------------------------")
-        # state, _, _, _, _ = self.memory.sample_buffer(2)
-        # state = (
-        #    torch.tensor(state[0]).float().to(self.critic.device),
-        #    torch.tensor(state[1]).float().to(self.critic.device),
-        # )
-        state = (
-            torch.rand((2, NUM_FEATURES, self.args.seq_len, NUM_ASSETS)).to(
-                self.device
-            ),
-            torch.rand((2, NUM_ASSETS)).to(self.device),
-        )
-
-        with torch.no_grad():
-            mu = self.actor(state)
 
     def learn(self):
         if self.memory.mem_cntr < self.args.batch_size:
@@ -160,11 +140,11 @@ class Agent(object):
 
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
-                target_actions = self.target_actor(new_state).float()
+                target_actions = F.softmax(self.target_actor(new_state), dim=-1)
                 critic_value_ = self.target_critic(new_state, target_actions)
                 critic_value = self.critic(state, action).float()
         else:
-            target_actions = self.target_actor(new_state)
+            target_actions = F.softmax(self.target_actor(new_state), dim=-1)
             critic_value_ = self.target_critic(new_state, target_actions)
             critic_value = self.critic(state, action)
 
@@ -190,9 +170,9 @@ class Agent(object):
 
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
-                mu = self.actor(state)
+                mu = F.softmax(self.actor(state), dim=-1)
         else:
-            mu = self.actor(state)
+            mu = F.softmax(self.actor(state), dim=-1)
 
         actor_loss = -self.critic(state, mu)
         actor_loss = torch.mean(actor_loss)
@@ -202,7 +182,6 @@ class Agent(object):
             actor_scaler.step(self.actor.optimizer)
             actor_scaler.update()
         else:
-            print("back")
             actor_loss.backward()
             self.actor.optimizer.step()
 

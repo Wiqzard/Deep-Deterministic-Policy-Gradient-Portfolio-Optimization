@@ -73,9 +73,9 @@ class Exp_Fed(Exp_Basic):
 
     def criterion(self, actions):
         return torch.mean(
-            torch.log(torch.sum(actions[:, 1:] * self.__future_price[:, 1:], dim=1))
+            torch.log(torch.sum(actions[:, :] * self.__future_price[:, :], dim=1))
             - torch.sum(
-                torch.abs(actions[:, 1:] - self.previous_w[:, 1:])
+                torch.abs(actions[:, :] - self.previous_w[:, :])
                 * self.__commission_ratio,
                 dim=1,
             )
@@ -91,7 +91,7 @@ class Exp_Fed(Exp_Basic):
             scales[0],
         )
         # print("X", X_t)
-        self.__future_price = torch.divide(X_t[:, -1, :], X_t[:, -2, :]).to(self.device)
+        self.__future_price = torch.divide(X_t[:, -2, :], X_t[:, -3, :]).to(self.device)
         # print("future", self.__future_price)
         # print(self.__future_price.shape)
 
@@ -143,7 +143,7 @@ class Exp_Fed(Exp_Basic):
                     # reward = -sum(rewards)
                     # print(reward)
                     # reward =  -self.calculate_cummulative_reward(rewards)
-                    reward = -criterion(actions)
+                    reward = criterion(actions)
                     # print(reward)
                     start = time.time()
                     if self.args.use_amp:

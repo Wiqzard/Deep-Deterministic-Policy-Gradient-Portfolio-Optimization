@@ -274,7 +274,7 @@ class Exp_Fed(Exp_Basic):
                     1
                     - c * w_t[0]
                     - (2 * c - c**2)
-                    * torch.nn.functional.relu(w_t[1:] - mu0 * w_t_1[1:]).sum(axis=1)
+                    * torch.nn.functional.relu(w_t[1:] - mu0 * w_t_1[1:]).sum(axis=-1)
                 )
                 return factor1 * factor2
 

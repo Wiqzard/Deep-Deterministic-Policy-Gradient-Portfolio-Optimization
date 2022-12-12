@@ -282,7 +282,6 @@ class Exp_Fed(Exp_Basic):
                 mu = recurse(mu)
 
             r_t = torch.log(mu * torch.dot(y_t, w_t_1))
-            print(torch.exp(r_t))
             rewards.append(r_t)
         return rewards
 

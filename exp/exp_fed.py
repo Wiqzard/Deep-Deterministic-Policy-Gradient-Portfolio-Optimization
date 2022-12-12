@@ -139,7 +139,8 @@ class Exp_Fed(Exp_Basic):
         for episode in range(args.episodes):
             self.actor.train()
             self.action_history = []
-            self.test_scores = []
+            self.train_scores = []
+
             with tqdm(
                 total=total_steps,
                 leave=self.args.colab,

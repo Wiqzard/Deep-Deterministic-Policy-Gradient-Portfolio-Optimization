@@ -179,6 +179,7 @@ class Exp_Fed(Exp_Basic):
                     # )
                     scores = self.calculate_rewards_torch(actions)
                     self.__store(actions, scores)
+                    print(self.train_scores)
                     self.train_data.action_memory.store_action(
                         actions.detach().cpu().numpy(), idxs
                     )
@@ -271,6 +272,7 @@ class Exp_Fed(Exp_Basic):
             mu = recurse(mu)
         r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))  # .squeeze()
         rewards += r_t.tolist()
+        print("rew", rewards)
         return rewards
 
     #        for batch in range(seq_x_s.shape[0]):

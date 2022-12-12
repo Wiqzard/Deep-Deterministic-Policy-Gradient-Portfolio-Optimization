@@ -253,6 +253,7 @@ class Exp_Fed(Exp_Basic):
         """
         seq_x_s = states
         mus, sigmas = scales
+        c = self.__commission_ratio
         rewards = []
         for batch in range(seq_x_s.shape[0]):
             mu = mus[batch]
@@ -263,10 +264,25 @@ class Exp_Fed(Exp_Basic):
             w_t_1 = prev_actions[batch].float().to(self.device)
             y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
             w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
-            mu_t = 1 - args.commission_rate_selling * sum(
-                torch.abs(w_t_prime - actions[batch])
-            )
-            r_t = torch.log(mu_t * torch.dot(y_t, w_t_1))
+            w_t = actions[batch]
+            mu = 1 - c * sum(torch.abs(w_t_prime - w_t))
+
+            def recurse(mu0):
+                factor1 = 1 / (1 - c * w_t_1[0])
+                mu0 = mu0 if isinstance(mu0, float) else mu0[:, None]
+                factor2 = (
+                    1
+                    - c * w_t[:, 0]
+                    - (2 * c - c**2)
+                    * torch.nn.functional.relu(w_t[1:] - mu0 * w_t_1[1:]).sum(axis=1)
+                )
+                return factor1 * factor2
+
+            for i in range(20):
+                mu = recurse(mu)
+
+            r_t = torch.log(mu * torch.dot(y_t, w_t_1))
+            print(torch.exp(r_t))
             rewards.append(r_t)
         return rewards
 

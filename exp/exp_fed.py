@@ -90,7 +90,7 @@ class Exp_Fed(Exp_Basic):
             scales[0],
         )
         # print("X", X_t)
-        self.__future_price = torch.divide(X_t[:, -1, :], X_t[:, -2, :])
+        self.__future_price = torch.divide(X_t[:, -1, :], X_t[:, -2, :]).to(self.device)
         # print("future", self.__future_price)
         # print(self.__future_price.shape)
 
@@ -124,7 +124,7 @@ class Exp_Fed(Exp_Basic):
                 for i, (idxs, scales, states, prev_actions, _) in enumerate(dataloader):
 
                     states, _, state_time_marks, _ = states
-                    self.previous_w = prev_actions
+                    self.previous_w = prev_actions.to(self.device)
                     self.__set_future_price(states, scales)
                     optimizer.zero_grad()
                     if self.args.use_amp:
@@ -132,7 +132,10 @@ class Exp_Fed(Exp_Basic):
                             actions = self.actor(states, state_time_marks, prev_actions)
                     else:
                         actions = self.actor(states, state_time_marks, prev_actions)
-                    print(actions)
+
+                    if self.args._print_train:
+                        print(actions)
+
                     # rewards = self.calculate_rewards_torch(
                     #    scales, states, prev_actions, actions, self.args
                     # )

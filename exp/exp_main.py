@@ -77,7 +77,6 @@ class Exp_Main(Exp_Basic):
         while not done:
             act = self.agent.choose_action(obs, flag="test")
             new_state, reward, done = env.step(act)
-            self.agent.fix_const_outputs()
             obs = new_state
 
             if self.args.ba:

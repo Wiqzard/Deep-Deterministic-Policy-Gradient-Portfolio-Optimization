@@ -273,7 +273,7 @@ class Exp_Fed(Exp_Basic):
             print(mu)
             mu = recurse(mu)
 
-        r_t = torch.log(mu * torch.dot(y_t, w_t_1))
+        r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))
         for i in range(r_t.shape[0]):
             rewards.append(r_t[i])
         return rewards

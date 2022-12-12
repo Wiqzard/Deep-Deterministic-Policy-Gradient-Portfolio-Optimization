@@ -262,7 +262,7 @@ class Exp_Fed(Exp_Basic):
         w_t_1 = self.__previous_w
         w_t_prime = torch.multiply(y_t, w_t_1) / torch.dot(y_t, w_t_1)
         w_t = actions
-        mu = 1 - c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1) 
+        mu = 1 - c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1)
 
         def recurse(mu0):
             factor1 = 1 / (1 - c * w_t_1[:, 0])
@@ -271,7 +271,9 @@ class Exp_Fed(Exp_Basic):
                 1
                 - c * w_t[:, 0]
                 - (2 * c - c**2)
-                * torch.nn.functional.relu(torch.sum(w_t[:, 1:] - mu0 * w_t_1[:, 1:], dim=-1))
+                * torch.nn.functional.relu(
+                    torch.sum(w_t[:, 1:] - mu0 * w_t_1[:, 1:], dim=-1)
+                )
             )
             return factor1 * factor2
 
@@ -283,27 +285,18 @@ class Exp_Fed(Exp_Basic):
         for i in range(r_t.shape[0]):
             rewards.append(r_t[i])
         return rewards
-#        for batch in range(seq_x_s.shape[0]):
-            #mu = mus[batch]
-            #sigma = sigmas[batch]
-            #X_t = seq_x_s[batch]
-            #X_t = np.multiply(X_t, sigma) + mu
-            #X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
-            #w_t_1 = prev_actions[batch].float().to(self.device)
-            #y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
-            #w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
-            #w_t = actions[batch]
-            #mu = 1 - c * sum(torch.abs(w_t_prime - w_t))
 
-    
-    def calc_reward(self, actions):
-        returns = torch.sum(actions[:, :] * self.__future_price[:, :], dim=1)
-     
-                - torch.sum(
-                    torch.abs(actions[:, :] - self.previous_w[:, :])
-                    * self.__commission_ratio,
-                    dim=1,
-                )
+    #        for batch in range(seq_x_s.shape[0]):
+    # mu = mus[batch]
+    # sigma = sigmas[batch]
+    # X_t = seq_x_s[batch]
+    # X_t = np.multiply(X_t, sigma) + mu
+    # X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
+    # w_t_1 = prev_actions[batch].float().to(self.device)
+    # y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
+    # w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
+    # w_t = actions[batch]
+    # mu = 1 - c * sum(torch.abs(w_t_prime - w_t))
 
     def log_benchmark(self, in_dollar: bool = True) -> None:
         """Logs the benchmark of the train and test datasat. Specific algorithm is specified under args.bechmark_name"""

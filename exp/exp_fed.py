@@ -200,7 +200,7 @@ class Exp_Fed(Exp_Basic):
         """responsible for storing scores and actions for each step"""
         for batch in range(actions.shape[0]):
             self.action_history.append(actions[batch, :].detach().cpu().numpy())
-            self.train_scores.append(scores[batch])
+        self.train_scores += scores
 
     def backtest(self, data=None, bar=None) -> List[float]:
         self.actor.load_checkpoint()

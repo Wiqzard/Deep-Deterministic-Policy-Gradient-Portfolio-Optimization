@@ -1,5 +1,5 @@
 from utils.tools import dotdict
-from exp.exp_fed import Exp_Fed
+from utils.exp_fed import Exp_Fed
 
 args = dotdict()
 args.colab = False

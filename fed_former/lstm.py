@@ -89,11 +89,11 @@ class ActorLSTM(nn.Module):
     def save_checkpoint(self):
         if not self.checkpoint_file:
             raise ValueError("Checkpoint file missing.")
-        print("... saving checkpoint ...")
+        # print("... saving checkpoint ...")
         torch.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        print("... loading checkpoint ...")
+        # print("... loading checkpoint ...")
         self.load_state_dict(torch.load(self.checkpoint_file))
 
 

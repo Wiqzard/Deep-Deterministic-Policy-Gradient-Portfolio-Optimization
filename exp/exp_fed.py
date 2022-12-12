@@ -73,7 +73,7 @@ class Exp_Fed(Exp_Basic):
 
     def criterion(self, actions):
         return torch.mean(
-            torch.log(torch.sum(actions * self.__future_price, dim=1))
+            torch.log(torch.sum(actions[:, 1:] * self.__future_price[:, 1:], dim=1))
             - torch.sum(
                 torch.abs(actions[:, 1:] - self.previous_w[:, 1:])
                 * self.__commission_ratio,

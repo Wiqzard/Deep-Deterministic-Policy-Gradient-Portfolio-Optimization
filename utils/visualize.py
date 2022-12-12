@@ -100,15 +100,20 @@ def plot_asset_values(
     granularity,
     scale: bool = True,
     difference: bool = False,
+    returns: bool = False,
     save_path=None,
 ) -> None:
     plt.figure(figsize=(20, 5), dpi=80)
     plt.title("Asset Values")
-    closes = price_matrix.iloc[:, 1:].values
+    closes = price_matrix.iloc[:, 1:]
     if scale:
         scaler = MinMaxScaler()  # MinMaxScaler()#StandardScaler()
-        scaler.fit(closes)
-        closes = scaler.transform(closes)
+        scaler.fit(closes.values)
+        closes = scaler.transform(closes.values)
+    elif returns:
+        closes = closes.pct_change().iloc[1:, :].values
+    else:
+        closes = closes.values
     lines = []
     for i in range(8):
         coin = COINS[i]

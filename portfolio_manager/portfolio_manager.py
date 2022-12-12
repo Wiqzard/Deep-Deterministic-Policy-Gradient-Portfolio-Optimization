@@ -193,7 +193,7 @@ class PortfolioManager:
         self.r[self.r < 0] = 0.0
 
         # add risk-free asset
-        self.r -= B.sum(axis=1) - 1  # * self.rf_rate / self.freq()
+        # self.r -= B.sum(axis=1) - 1  # * self.rf_rate / self.freq()
         # add fees
         self.fees = self.to_rebalance(B, X).abs() * self.fee
         self.asset_r -= self.fees

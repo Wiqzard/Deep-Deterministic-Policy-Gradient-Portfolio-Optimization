@@ -187,7 +187,6 @@ class Exp_Fed(Exp_Basic):
 
                     scores = self.calculate_rewards_torch(actions)
                     self.__store(actions, scores)
-                    print(sum(self.train_scores))
                     self.train_data.action_memory.store_action(
                         actions.detach().cpu().numpy(), idxs
                     )

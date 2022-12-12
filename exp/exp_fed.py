@@ -200,7 +200,7 @@ class Exp_Fed(Exp_Basic):
         """responsible for storing scores and actions for each step"""
         for batch in range(actions.shape[0]):
             self.action_history.append(actions[batch, :].detach().cpu().numpy())
-            self.train_scores.append(scores[batch].detach().cpu().item())
+            self.train_scores.append(scores[batch])
 
     def backtest(self, data=None, bar=None) -> List[float]:
         self.actor.load_checkpoint()
@@ -273,9 +273,10 @@ class Exp_Fed(Exp_Basic):
             print(mu)
             mu = recurse(mu)
 
-        r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))
-        for i in range(r_t.shape[0]):
-            rewards.append(r_t[i])
+        r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True)).squeeze()
+        rewards += r_t.tolist()
+        # for i in range(r_t.shape[0]):
+        #    rewards.append(r_t[i])
         return rewards
 
     #        for batch in range(seq_x_s.shape[0]):

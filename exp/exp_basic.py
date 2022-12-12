@@ -88,7 +88,7 @@ class Exp_Basic:
                     if test_scores
                     else 0
                 )
-                print(max(test_scores)
+                print(max(test_scores))
             logger.info(
                 f"Episode: {episode} --- Train Value: {train_value:.2f} --- Test Value: {test_value:.2f}"
             )

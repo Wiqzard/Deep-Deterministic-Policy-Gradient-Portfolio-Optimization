@@ -174,10 +174,10 @@ class Exp_Fed(Exp_Basic):
                     end = time.time()
                     # print("backward took %.6f seconds" % (end - start))
 
-                    scores = self.calculate_rewards_torch(
-                        scales, states, prev_actions, actions, args
-                    )
-
+                    # scores = self.calculate_rewards_torch(
+                    #    scales, states, prev_actions, actions, args
+                    # )
+                    scores = self.calculate_rewards_torch(actions)
                     self.__store(actions, scores)
                     self.train_data.action_memory.store_action(
                         actions.detach().cpu().numpy(), idxs
@@ -226,13 +226,7 @@ class Exp_Fed(Exp_Basic):
             self.__set_future_price(state, scale)
             self.__previous_w = prev_actions.to(self.device)
 
-            reward = (
-                self.calculate_rewards_torch(
-                    scale, state, prev_action, action, self.args
-                )[-1]
-                .cpu()
-                .numpy()
-            )
+            reward = self.calculate_rewards_torch(action)[-1].cpu().numpy()
             prev_action = action
             score_history.append(reward)
             action_history.append(action.cpu().numpy())

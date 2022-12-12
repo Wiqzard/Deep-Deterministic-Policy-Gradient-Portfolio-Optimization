@@ -80,12 +80,12 @@ class Exp_Fed(Exp_Basic):
             return None
 
     def get_loss(self, flag="with_w"):
-        def crit2(actions):
+        def crit1(actions):
             return torch.mean(
                 torch.log(torch.sum(actions * self.__future_price, dim=1))
             ) - LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
 
-        def criterion(actions):
+        def crit2(actions):
             return torch.mean(
                 torch.log(torch.sum(actions[:, :] * self.__future_price[:, :], dim=1))
                 - torch.sum(
@@ -95,10 +95,21 @@ class Exp_Fed(Exp_Basic):
                 )
             )
 
+        def crit3(actions):
+            return (
+                torch.mean(torch.log(torch.sum(actions * self.__future_price, dim=1)))
+                - LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
+                + self.args.diff_factor
+                * torch.sum(torch.abs(actions - self.__previous_w), dim=1)
+                / NUM_ASSETS
+            )
+
         if flag == "plain":
-            return crit2
+            return crit1
         elif flag == "with_w":
-            return criterion
+            return crit2
+        elif flag == "with_diff":
+            return crit3
 
     def __set_future_price(self, states, scales) -> None:
         """y_t from paper"""
@@ -272,8 +283,8 @@ class Exp_Fed(Exp_Basic):
             mu = recurse(mu)
         r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))  # .squeeze()
         rewards += r_t.tolist()
-        print("rew", rewards)
-        return rewards
+        print("rew", len(rewards))
+        return rewards[-1]
 
     #        for batch in range(seq_x_s.shape[0]):
     # mu = mus[batch]

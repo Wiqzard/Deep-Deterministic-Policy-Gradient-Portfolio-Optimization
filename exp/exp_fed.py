@@ -101,17 +101,7 @@ class Exp_Fed(Exp_Basic):
             return criterion
 
     def __set_future_price(self, states, scales) -> None:
-        """y_t from paper
-
-
-
-
-        g
-
-
-
-
-        """
+        """y_t from paper"""
         X_t = torch.add(
             torch.multiply(
                 states,

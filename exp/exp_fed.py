@@ -143,7 +143,7 @@ class Exp_Fed(Exp_Basic):
                     # reward = -sum(rewards)
                     # print(reward)
                     # reward =  -self.calculate_cummulative_reward(rewards)
-                    reward = criterion(actions)
+                    reward = -criterion(actions)
                     # print(reward)
                     start = time.time()
                     if self.args.use_amp:

@@ -139,7 +139,7 @@ class Exp_Fed(Exp_Basic):
         for episode in range(args.episodes):
             self.actor.train()
             self.action_history = []
-            self.score_history = []
+            self.test_scores = []
             with tqdm(
                 total=total_steps,
                 leave=self.args.colab,
@@ -197,7 +197,7 @@ class Exp_Fed(Exp_Basic):
     def store(self, actions, scores) -> None:
         for batch in range(actions.shape[0]):
             self.action_history.append(actions[batch, :].detach().cpu().numpy())
-            self.score_history.append(scores)
+            self.train_scores.append(scores)
 
     def backtest(self, data=None, bar=None) -> List[float]:
         self.actor.load_checkpoint()
@@ -221,12 +221,10 @@ class Exp_Fed(Exp_Basic):
             reward = (
                 self.calculate_rewards_torch(
                     scale, state, prev_action, action, self.args
-                )
-                # .cpu()
-                # .numpy()
+                )[-1]
+                .cpu()
+                .numpy()
             )
-            print(reward)
-            # reward = reward[-1].cpu().numpy()
             prev_action = action
             score_history.append(reward)
             action_history.append(action.cpu().numpy())

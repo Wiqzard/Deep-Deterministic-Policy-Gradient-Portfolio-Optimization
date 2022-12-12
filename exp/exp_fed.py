@@ -285,18 +285,6 @@ class Exp_Fed(Exp_Basic):
         print("rew", len(rewards))
         return rewards[-1]
 
-    #        for batch in range(seq_x_s.shape[0]):
-    # mu = mus[batch]
-    # sigma = sigmas[batch]
-    # X_t = seq_x_s[batch]
-    # X_t = np.multiply(X_t, sigma) + mu
-    # X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
-    # w_t_1 = prev_actions[batch].float().to(self.device)
-    # y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
-    # w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
-    # w_t = actions[batch]
-    # mu = 1 - c * sum(torch.abs(w_t_prime - w_t))
-
     def log_benchmark(self, in_dollar: bool = True) -> None:
         """Logs the benchmark of the train and test datasat. Specific algorithm is specified under args.bechmark_name"""
         portfolio_value_train = self.ubah(flag="train")

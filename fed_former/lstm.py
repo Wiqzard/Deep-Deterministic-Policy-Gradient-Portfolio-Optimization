@@ -65,7 +65,6 @@ class ActorLSTM(nn.Module):
         #   hidden = self.init_hidden(time_mark.shape[-1])
         embed = self.embedding(state_value, time_mark)
         output, (hidden_state, cell_state) = self.lstm(embed)  # , hidden)
-        #        hidden_state = hidden_state.permute(1, 0, 2).squeeze(1)
         output = torch.flatten(output, start_dim=1, end_dim=-1)
         action = F.leaky_relu(self.fc1(output))
         action = torch.flatten(action, start_dim=1, end_dim=-1)

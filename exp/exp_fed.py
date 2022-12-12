@@ -248,14 +248,11 @@ class Exp_Fed(Exp_Basic):
         rewards = []
         y_t = self.__future_price
         w_t_1 = self.__previous_w
-        # w_t_prime = torch.multiply(y_t, w_t_1) / torch.dot(y_t, w_t_1)
         w_t_prime = torch.multiply(y_t, w_t_1) / torch.sum(
             y_t * w_t_1, dim=1, keepdim=True
         )
-
         w_t = actions
         mu = 1 - c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1)
-        print("mu", mu)
 
         def recurse(mu0):
             factor1 = 1 / (1 - c * w_t_1[:, 0])
@@ -271,13 +268,9 @@ class Exp_Fed(Exp_Basic):
             return factor1 * factor2
 
         for i in range(20):
-            print(mu)
             mu = recurse(mu)
-
         r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))  # .squeeze()
         rewards += r_t.tolist()
-        # for i in range(r_t.shape[0]):
-        #    rewards.append(r_t[i])
         return rewards
 
     #        for batch in range(seq_x_s.shape[0]):

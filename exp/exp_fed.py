@@ -80,12 +80,12 @@ class Exp_Fed(Exp_Basic):
             return None
 
     def get_loss(self, flag="with_w"):
-        def crit2(self, actions):
-            return -torch.mean(
+        def crit2(actions):
+            return torch.mean(
                 torch.log(torch.sum(actions * self.__future_price, dim=1))
             ) + LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
 
-        def criterion(self, actions):
+        def criterion(actions):
             return torch.mean(
                 torch.log(torch.sum(actions[:, :] * self.__future_price[:, :], dim=1))
                 - torch.sum(

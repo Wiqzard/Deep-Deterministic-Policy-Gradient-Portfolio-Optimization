@@ -279,7 +279,9 @@ class Exp_Fed(Exp_Basic):
             mu = recurse(mu)
         print(y_t.shape)
         print(w_t_1.shape)
-        r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))  # .squeeze()
+        r_t = torch.log(
+            1 - mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True)
+        )  # .squeeze()
         rewards = r_t.tolist()
         print(rewards)
         return rewards[-1]

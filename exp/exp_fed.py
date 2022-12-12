@@ -191,7 +191,7 @@ class Exp_Fed(Exp_Basic):
                 episode=episode, train_scores=self.train_scores, test_scores=test_scores
             )
             self.train_scores_episodes.append(self.train_scores)
-            self.test_scores_episodes.append(self.test_scores)
+            self.test_scores_episodes.append(test_scores)
             self.train_action_histories.append(self.action_history)
 
             self.save_results()

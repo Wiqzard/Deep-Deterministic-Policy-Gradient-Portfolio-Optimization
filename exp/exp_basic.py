@@ -82,13 +82,13 @@ class Exp_Basic:
                 )
             else:
                 train_value = self.initial_value * math.exp(sum(train_scores))
-                print(len(train_scores))
+                print(train_scores[:50])
                 test_value = (
                     self.initial_value * math.exp(sum(test_scores))
                     if test_scores
                     else 0
                 )
-
+                print(test_scores[:50])
             logger.info(
                 f"Episode: {episode} --- Train Value: {train_value:.2f} --- Test Value: {test_value:.2f}"
             )

@@ -89,7 +89,7 @@ class Exp_Fed(Exp_Basic):
             return torch.mean(
                 torch.log(torch.sum(actions[:, :] * self.__future_price[:, :], dim=1))
                 - torch.sum(
-                    torch.abs(actions[:, :] - self.previous_w[:, :])
+                    torch.abs(actions[:, :] - self.__previous_w[:, :])
                     * self.__commission_ratio,
                     dim=1,
                 )
@@ -149,7 +149,7 @@ class Exp_Fed(Exp_Basic):
                 for i, (idxs, scales, states, prev_actions, _) in enumerate(dataloader):
 
                     states, _, state_time_marks, _ = states
-                    self.previous_w = prev_actions.to(self.device)
+                    self.__previous_w = prev_actions.to(self.device)
                     self.__set_future_price(states, scales)
                     optimizer.zero_grad()
                     if self.args.use_amp:
@@ -212,15 +212,20 @@ class Exp_Fed(Exp_Basic):
         test_data = data or self.test_data
         prev_action = self.get_start_action(flag="uni")
         for idx in range(len(test_data)):
-            _, scale, state, _, _ = test_data[idx]
+            _, scale, state, prev_actions, _ = test_data[idx]
             state, _, state_time_mark, _ = state
             state = state.unsqueeze(0)
             state_time_mark = state_time_mark.unsqueeze(0)
             prev_action = prev_action.unsqueeze(0).to(self.device)
+
             with torch.no_grad():
                 action = self.actor(state, state_time_mark, prev_action)
             if self.args.ba:
                 print(action)
+
+            self.__set_future_price(state, scale)
+            self.__previous_w = prev_actions.to(self.device)
+
             reward = (
                 self.calculate_rewards_torch(
                     scale, state, prev_action, action, self.args
@@ -242,7 +247,7 @@ class Exp_Fed(Exp_Basic):
     # )
     # return reward
 
-    def calculate_rewards_torch(self, scales, states, prev_actions, actions, args):
+    def calculate_rewards_torch(self, actions):
         """
         put that into data class
         args: dict: {"state_t": (X_t, w_t-1), "action_t" : w_t}
@@ -251,39 +256,54 @@ class Exp_Fed(Exp_Basic):
         -> Calculate mu_t: Assume cp=cs i.e. commission rate for selling and purchasing -> mu_t = c*sum(|\omgega_t,i' - \omega_t,i|)
         -> Calculate r_t = 1/t_f ln(mu_t*y_t . w_t_1)
         """
-        seq_x_s = states
-        mus, sigmas = scales
         c = self.__commission_ratio
         rewards = []
-        for batch in range(seq_x_s.shape[0]):
-            mu = mus[batch]
-            sigma = sigmas[batch]
-            X_t = seq_x_s[batch]
-            X_t = np.multiply(X_t, sigma) + mu
-            X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
-            w_t_1 = prev_actions[batch].float().to(self.device)
-            y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
-            w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
-            w_t = actions[batch]
-            mu = 1 - c * sum(torch.abs(w_t_prime - w_t))
+        y_t = self.__future_price
+        w_t_1 = self.__previous_w
+        w_t_prime = torch.multiply(y_t, w_t_1) / torch.dot(y_t, w_t_1)
+        w_t = actions
+        mu = 1 - c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1) 
 
-            def recurse(mu0):
-                factor1 = 1 / (1 - c * w_t_1[0])
-                # mu0 = mu0 if isinstance(mu0, float) else mu0[:, None]
-                factor2 = (
-                    1
-                    - c * w_t[0]
-                    - (2 * c - c**2)
-                    * torch.nn.functional.relu(w_t[1:] - mu0 * w_t_1[1:]).sum(axis=-1)
-                )
-                return factor1 * factor2
+        def recurse(mu0):
+            factor1 = 1 / (1 - c * w_t_1[:, 0])
+            mu0 = mu0 if isinstance(mu0, float) else mu0[:, None]
+            factor2 = (
+                1
+                - c * w_t[:, 0]
+                - (2 * c - c**2)
+                * torch.nn.functional.relu(torch.sum(w_t[:, 1:] - mu0 * w_t_1[:, 1:], dim=-1))
+            )
+            return factor1 * factor2
 
-            for i in range(20):
-                mu = recurse(mu)
+        for i in range(20):
+            print(mu)
+            mu = recurse(mu)
 
-            r_t = torch.log(mu * torch.dot(y_t, w_t_1))
-            rewards.append(r_t)
+        r_t = torch.log(mu * torch.dot(y_t, w_t_1))
+        for i in range(r_t.shape[0]):
+            rewards.append(r_t[i])
         return rewards
+#        for batch in range(seq_x_s.shape[0]):
+            #mu = mus[batch]
+            #sigma = sigmas[batch]
+            #X_t = seq_x_s[batch]
+            #X_t = np.multiply(X_t, sigma) + mu
+            #X_t = torch.tensor(X_t, dtype=torch.float32).float().to(self.device)
+            #w_t_1 = prev_actions[batch].float().to(self.device)
+            #y_t = X_t[args.seq_len - 1, :] / X_t[args.seq_len - 2, :]
+            #w_t_prime = (torch.multiply(y_t, w_t_1)) / torch.dot(y_t, w_t_1)
+            #w_t = actions[batch]
+            #mu = 1 - c * sum(torch.abs(w_t_prime - w_t))
+
+    
+    def calc_reward(self, actions):
+        returns = torch.sum(actions[:, :] * self.__future_price[:, :], dim=1)
+     
+                - torch.sum(
+                    torch.abs(actions[:, :] - self.previous_w[:, :])
+                    * self.__commission_ratio,
+                    dim=1,
+                )
 
     def log_benchmark(self, in_dollar: bool = True) -> None:
         """Logs the benchmark of the train and test datasat. Specific algorithm is specified under args.bechmark_name"""

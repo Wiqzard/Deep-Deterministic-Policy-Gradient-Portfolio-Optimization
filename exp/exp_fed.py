@@ -269,7 +269,7 @@ class Exp_Fed(Exp_Basic):
 
             def recurse(mu0):
                 factor1 = 1 / (1 - c * w_t_1[0])
-                mu0 = mu0 if isinstance(mu0, float) else mu0[:, None]
+                # mu0 = mu0 if isinstance(mu0, float) else mu0[:, None]
                 factor2 = (
                     1
                     - c * w_t[:, 0]

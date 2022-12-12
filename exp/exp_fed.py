@@ -119,7 +119,14 @@ class Exp_Fed(Exp_Basic):
             ),
             scales[0],
         )
-        self.__future_price = torch.divide(X_t[:, -1, :], X_t[:, -2, :]).to(self.device)
+        if self.args.y == 1:
+            self.__future_price = torch.divide(X_t[:, -1, :], X_t[:, -2, :]).to(
+                self.device
+            )
+        elif self.args.y == 2:
+            self.__future_price = torch.divide(X_t[:, -2, :], X_t[:, -3:, :]).to(
+                self.device
+            )
 
     def train(self, with_test: bool = True, resume: bool = False) -> None:
         args = self.args
@@ -183,7 +190,6 @@ class Exp_Fed(Exp_Basic):
                     )
                     pbar.update(args.batch_size)
 
-                train_scores = [reward.detach().cpu().numpy()]
                 self.actor.save_checkpoint()
                 test_scores = self.backtest(bar=pbar) if with_test else None
 

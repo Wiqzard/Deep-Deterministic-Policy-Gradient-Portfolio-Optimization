@@ -282,7 +282,7 @@ class Exp_Fed(Exp_Basic):
             mu = recurse(mu)
         r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))  # .squeeze()
         rewards += r_t.tolist()
-        # print("rew", len(rewards))
+        print("rew", len(rewards))
         return rewards[-1]
 
     #        for batch in range(seq_x_s.shape[0]):

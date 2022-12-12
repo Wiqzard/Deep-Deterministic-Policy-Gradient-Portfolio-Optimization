@@ -254,7 +254,6 @@ class Exp_Fed(Exp_Basic):
         -> Calculate r_t = 1/t_f ln(mu_t*y_t . w_t_1)
         """
         c = self.__commission_ratio
-        rewards = []
         y_t = self.__future_price
         w_t_1 = self.__previous_w
         w_t_prime = torch.multiply(y_t, w_t_1) / torch.sum(
@@ -281,7 +280,8 @@ class Exp_Fed(Exp_Basic):
         print(y_t.shape)
         print(w_t_1.shape)
         r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1, keepdim=True))  # .squeeze()
-        rewards += r_t.tolist()
+        rewards = r_t.tolist()
+        print(rewards)
         return rewards[-1]
 
     def log_benchmark(self, in_dollar: bool = True) -> None:

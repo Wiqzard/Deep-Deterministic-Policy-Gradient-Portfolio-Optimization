@@ -279,7 +279,7 @@ class Exp_Fed(Exp_Basic):
             mu = recurse(mu)
         r_t = torch.log(mu * torch.sum(y_t * w_t_1, dim=1))  # .squeeze()
         rewards = r_t.tolist()
-        return rewards[-1]
+        return rewards
 
     def log_benchmark(self, in_dollar: bool = True) -> None:
         """Logs the benchmark of the train and test datasat. Specific algorithm is specified under args.bechmark_name"""

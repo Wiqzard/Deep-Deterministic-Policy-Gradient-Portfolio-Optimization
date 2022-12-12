@@ -177,7 +177,8 @@ class Exp_Fed(Exp_Basic):
                     scores = self.calculate_rewards_torch(
                         scales, states, prev_actions, actions, args
                     )
-                    self.store(actions, scores)
+
+                    self.__store(actions, scores)
                     self.train_data.action_memory.store_action(
                         actions.detach().cpu().numpy(), idxs
                     )
@@ -195,10 +196,12 @@ class Exp_Fed(Exp_Basic):
 
             self.save_results()
 
-    def store(self, actions, scores) -> None:
+    def __store(self, actions, scores) -> None:
+        """responsible for storing scores and actions for each step"""
         for batch in range(actions.shape[0]):
             self.action_history.append(actions[batch, :].detach().cpu().numpy())
-            self.train_scores.append(scores)
+            print(scores[batch])
+            self.train_scores.append(scores[batch].detach().cpu().item())
 
     def backtest(self, data=None, bar=None) -> List[float]:
         self.actor.load_checkpoint()

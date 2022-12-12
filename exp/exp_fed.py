@@ -185,9 +185,6 @@ class Exp_Fed(Exp_Basic):
                     end = time.time()
                     # print("backward took %.6f seconds" % (end - start))
 
-                    # scores = self.calculate_rewards_torch(
-                    #    scales, states, prev_actions, actions, args
-                    # )
                     scores = self.calculate_rewards_torch(actions)
                     self.__store(actions, scores)
                     self.train_data.action_memory.store_action(
@@ -211,7 +208,7 @@ class Exp_Fed(Exp_Basic):
         """responsible for storing scores and actions for each step"""
         for batch in range(actions.shape[0]):
             self.action_history.append(actions[batch, :].detach().cpu().numpy())
-        self.train_scores += scores
+            self.train_scores.append(scores[batch])
 
     def backtest(self, data=None, bar=None) -> List[float]:
         self.actor.load_checkpoint()

@@ -83,7 +83,7 @@ class Exp_Fed(Exp_Basic):
         def crit2(actions):
             return torch.mean(
                 torch.log(torch.sum(actions * self.__future_price, dim=1))
-            ) + LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
+            ) - LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
 
         def criterion(actions):
             return torch.mean(
@@ -182,9 +182,10 @@ class Exp_Fed(Exp_Basic):
                         actions.detach().cpu().numpy(), idxs
                     )
                     pbar.update(args.batch_size)
-            train_scores = [reward.detach().cpu().numpy()]
-            self.actor.save_checkpoint()
-            test_scores = self.backtest(bar=pbar) if with_test else None
+
+                train_scores = [reward.detach().cpu().numpy()]
+                self.actor.save_checkpoint()
+                test_scores = self.backtest(bar=pbar) if with_test else None
 
             self.log_episode_result(
                 episode=episode, train_scores=train_scores, test_scores=test_scores

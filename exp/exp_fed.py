@@ -226,7 +226,7 @@ class Exp_Fed(Exp_Basic):
             self.__set_future_price(state, scale)
             self.__previous_w = prev_action.to(self.device)
 
-            reward = self.calculate_rewards_torch(action.unsqueeze(0))[-1].numpy()
+            reward = self.calculate_rewards_torch(action.unsqueeze(0))[-1]
             prev_action = action
             score_history.append(reward)
             action_history.append(action.cpu().numpy())
@@ -254,7 +254,7 @@ class Exp_Fed(Exp_Basic):
         )
 
         w_t = actions
-        mu = c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1)
+        mu = 1 - c * torch.sum(torch.abs(w_t_prime - w_t), dim=-1)
         print("mu", mu)
 
         def recurse(mu0):

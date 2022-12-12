@@ -222,9 +222,10 @@ class Exp_Fed(Exp_Basic):
                 self.calculate_rewards_torch(
                     scale, state, prev_action, action, self.args
                 )
-                .cpu()
-                .numpy()
+                # .cpu()
+                # .numpy()
             )
+            print(reward)
             # reward = reward[-1].cpu().numpy()
             prev_action = action
             score_history.append(reward)

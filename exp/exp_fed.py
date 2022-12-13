@@ -29,6 +29,8 @@ class Exp_Fed(Exp_Basic):
         self.actor = ActorLSTM(args, embed_type=args.embed_type, freq="t").to(
             self.device
         )
+        self.__LAMBDA1 = args.LAMBDA1
+        self.__LAMBDA2 = args.LAMBDA2
 
     def get_start_action(self, flag="uni"):
         if flag == "uni":
@@ -83,7 +85,9 @@ class Exp_Fed(Exp_Basic):
         def crit1(actions):
             return torch.mean(
                 torch.log(torch.sum(actions * self.__future_price, dim=1))
-            ) - LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
+            ) - self.__LAMBDA1 * torch.mean(
+                torch.sum(-torch.log(1 + self.__LAMBDA2 - actions), dim=1)
+            )
 
         def crit2(actions):
             return torch.mean(
@@ -100,8 +104,25 @@ class Exp_Fed(Exp_Basic):
                 torch.mean(torch.log(torch.sum(actions * self.__future_price, dim=1)))
                 - LAMBDA * torch.mean(torch.sum(-torch.log(1 + 1e-6 - actions), dim=1))
                 + self.args.diff_factor
-                * torch.sum(torch.abs(actions - self.__previous_w), dim=1)
+                * torch.mean(torch.sum(torch.abs(actions - self.__previous_w), dim=1))
                 / NUM_ASSETS
+            )
+
+        def crit4(actions):
+            return (
+                torch.mean(torch.log(torch.sum(actions * self.__future_price, dim=1)))
+                - self.__LAMBDA1
+                * torch.mean(torch.sum(-torch.log(1 + self.__LAMBDA2 - actions), dim=1))
+                + self.args.diff_factor
+                * torch.mean(torch.sum(torch.abs(actions - self.__previous_w), dim=1))
+                / NUM_ASSETS
+            )
+
+        def crit5(actions):
+            return torch.mean(
+                torch.log(torch.sum(actions * self.__future_price, dim=1))
+            ) - self.__LAMBDA1 * torch.mean(
+                torch.sum(-torch.log(1 + self.__LAMBDA2 * actions), dim=1)
             )
 
         if flag == "plain":
@@ -110,6 +131,10 @@ class Exp_Fed(Exp_Basic):
             return crit2
         elif flag == "with_diff":
             return crit3
+        elif flag == "with_w_diff":
+            return crit4
+        elif flag == "plain_v2":
+            return crit5
 
     def __set_future_price(self, states, scales) -> None:
         """y_t from paper"""

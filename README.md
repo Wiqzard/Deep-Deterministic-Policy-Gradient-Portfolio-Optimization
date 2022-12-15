@@ -3,12 +3,8 @@
 [![Gem Version](https://badge.fury.io/rb/colorls.svg)](https://badge.fury.io/rb/colorls)
 
 
+Use notebook and fed stuff.
 
-## TODO
-
-* Rewrite Code with typedefs from replay_buffer
-* Global constants in main from config
-<<<<<<< HEAD
 ## Sources
 * https://arxiv.org/pdf/1509.02971.pdf
 * https://arxiv.org/pdf/1706.10059.pdf
